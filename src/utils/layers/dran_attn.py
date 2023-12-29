@@ -27,15 +27,15 @@ class CPAMEnc(nn.Module):
                                 norm_layer(in_channels),
                                 nn.ReLU(True))
 
-    def forward(self, x):
-        b, c, h, w = x.size()
+    def forward(self, x: Tensor):
+        b, c, h, w = x.shape
         
         feat1 = self.conv1(self.pool1(x)).view(b,c,-1)
         feat2 = self.conv2(self.pool2(x)).view(b,c,-1)
         feat3 = self.conv3(self.pool3(x)).view(b,c,-1)
         feat4 = self.conv4(self.pool4(x)).view(b,c,-1)
         
-        return torch.cat((feat1, feat2, feat3, feat4), 2)
+        return torch.cat((feat1, feat2, feat3, feat4), 2).permute(0,2,1)
 
 
 class CPAMDec(nn.Module):
@@ -50,6 +50,7 @@ class CPAMDec(nn.Module):
         self.conv_query = nn.Conv2d(in_channels = in_channels , out_channels = in_channels//4, kernel_size= 1) # query_conv2
         self.conv_key = nn.Linear(in_channels, in_channels//4) # key_conv2
         self.conv_value = nn.Linear(in_channels, in_channels) # value2
+
     def forward(self, x: Tensor, y: Tensor):
         """
             inputs :
@@ -72,6 +73,23 @@ class CPAMDec(nn.Module):
         out = self.scale*out + x
         return out
 
+class CPAM(nn.Module):
+    def __init__(self, in_channels, norm_layer= nn.BatchNorm2d, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.pre_conv = nn.Sequential(nn.Conv2d(in_channels, in_channels // 4, 3, padding=1, bias=False),
+                                   norm_layer(in_channels // 4),
+                                   nn.ReLU())
+        self.encoder = CPAMEnc(in_channels // 4, norm_layer)
+        self.decoder = CPAMDec(in_channels // 4)
+
+    def forward(self, x: Tensor):
+        out = self.pre_conv(x)
+
+        attn = self.encoder(out)
+        out = self.decoder(out, attn)
+
+        return out
+
 
 class CCAMDec(nn.Module):
     """
@@ -82,7 +100,7 @@ class CCAMDec(nn.Module):
         self.softmax  = nn.Softmax(dim=-1)
         self.scale = nn.Parameter(torch.zeros(1))
 
-    def forward(self, x,y):
+    def forward(self, x: Tensor,y: Tensor):
         """
             inputs :
                 x : input feature(N,C,H,W) y:gathering centers(N,K,H,W)
@@ -90,10 +108,10 @@ class CCAMDec(nn.Module):
                 out : compact channel attention feature
                 attention map: K*C
         """
-        m_batchsize,C,width ,height = x.size()
+        m_batchsize,C,width ,height = x.shape
         x_reshape =x.view(m_batchsize,C,-1)
 
-        B,K,W,H = y.size()
+        B,K,W,H = y.shape
         y_reshape =y.view(B,K,-1)
         proj_query  = x_reshape #BXC1XN
         proj_key  = y_reshape.permute(0,2,1) #BX(N)XC
@@ -107,3 +125,63 @@ class CCAMDec(nn.Module):
 
         out = x + self.scale*out
         return out
+    
+class CCAMEnc(nn.Module):
+    """
+    CCAM encoding module
+    """
+    def __init__(self, inter_channels, norm_layer = nn.BatchNorm2d) -> None:
+        super().__init__()
+        self.layers = nn.Sequential(nn.Conv2d(inter_channels, inter_channels//16, 1, bias=False),
+                                   norm_layer(inter_channels//16),
+                                   nn.ReLU())
+        
+    def forward(self, x):
+        return self.layers(x)
+        
+class CCAM(nn.Module):
+    def __init__(self, in_channels, norm_layer= nn.BatchNorm2d, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.pre_conv = nn.Sequential(nn.Conv2d(in_channels, in_channels // 4, 3, padding=1, bias=False),
+                                   norm_layer(in_channels // 4),
+                                   nn.ReLU())
+        self.encoder = CCAMEnc(in_channels // 4, norm_layer)
+        self.decoder = CCAMDec()
+
+    def forward(self, x: Tensor):
+        out = self.pre_conv(x)
+
+        attn = self.encoder(out)
+        out = self.decoder(out, attn)
+        return out 
+    
+class DRAN(nn.Module):
+    def __init__(self, in_channels, norm_layer = nn.BatchNorm2d) -> None:
+        super().__init__()
+
+        self.in_channels = in_channels
+        self.norm_layer = norm_layer
+        self.ccam = CCAM(in_channels, norm_layer)
+        self.cpam = CPAM(in_channels, norm_layer)
+        self.post_ccam_Conv = nn.Sequential(nn.Conv2d(in_channels//4, in_channels // 4, 1, padding=0, bias=False),
+                                   norm_layer(in_channels // 4),
+                                   nn.ReLU())
+        self.post_cpam_Conv = nn.Sequential(nn.Conv2d(in_channels//4, in_channels // 4, 1, padding=0, bias=False),
+                                   norm_layer(in_channels // 4),
+                                   nn.ReLU())
+        self.fusion_conv = nn.Sequential(nn.Conv2d(in_channels//4*2, in_channels, 1, padding=0, bias=False),
+                                   norm_layer(in_channels),
+                                   nn.ReLU())
+        
+    def forward(self, x):
+        ccam = self.ccam(x)
+        cpam = self.cpam(x)
+
+        ccam = self.post_ccam_Conv(ccam)
+        cpam = self.post_cpam_Conv(cpam)
+
+        feat = self.fusion_conv(torch.cat([cpam, ccam], dim = 1))
+
+        return feat
+    
+
