@@ -67,7 +67,7 @@ class CFC(nn.Module):
 
 
 class CRTComponent(nn.Module):
-    def __init__(self, in_channels:int, inter_channels:int|None ,) -> None:
+    def __init__(self, in_channels:int, inter_channels:int=None ,) -> None:
         super().__init__()
         if inter_channels is None:
             inter_channels = inter_channels //4
@@ -89,7 +89,7 @@ class CRT(nn.Module):
     '''
     Compartment Response Transform
     '''
-    def __init__(self, in_channels:int, inter_channels:int|None, n_attributes:int = 4) -> None:
+    def __init__(self, in_channels:int, inter_channels:int=None, n_attributes:int = 4) -> None:
         super().__init__()
 
         self.in_channels = in_channels
@@ -145,7 +145,7 @@ class ICN(nn.Module):
     '''
     Inferotemporal Cortex Network
     '''
-    def __init__(self, in_channels:int, out_channels: int| None=None, n_attributes:int = 4) -> None:
+    def __init__(self, in_channels:int, out_channels: int=None, n_attributes:int = 4) -> None:
         super().__init__()
 
         if out_channels is None:
