@@ -1,11 +1,9 @@
 import torch
 from torch import Tensor
 import torch.nn as nn
-import sys
-sys.path.append('C:\\Users\\RedmiBook\\HUST\\Documents\\Studying\\Pixta_AI_hackathon\\Face-Analysis\\src')
 import torch.nn.functional as F
 # print(sys.path)
-from utils.layers.icn import ICN, CFC
+from ..utils.layers.icn import ICN, CFC
 import timm
 
 # print(timm.list_models(pretrained=True))
