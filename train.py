@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import logging
 from tqdm.auto import tqdm
+from sklearn.metrics import accuracy_score, classification_report, precision_score, average_precision_score, recall_score
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -48,9 +49,10 @@ def evaluate(model, loss_func, valid_dl, metric=None):
     return avg_loss, total, avg_metric
 
 
-def accuracy(outputs, labels):
-    _, preds = torch.max(outputs, dim=1)
-    return torch.tensor(torch.sum(preds == labels).item() / len(preds))
+def accuracy(outputs, y_true, label_names):
+    _, y_pred = torch.max(outputs, dim=1)
+    print(classification_report(y_true, y_pred,target_names=label_names))
+    # return torch.tensor(torch.sum(y_pred == y_true).item() / len(y_pred))
 
 def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, metric=None, PATH=''):
     train_losses, val_losses, val_metrics = [], [], []

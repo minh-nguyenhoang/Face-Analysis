@@ -2,5 +2,6 @@
 *.ckpt
 *.jpg
 *.png
+*.ipynb
 *__pycache__
 *Pytorch_Retinaface
