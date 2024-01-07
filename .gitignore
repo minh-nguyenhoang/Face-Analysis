@@ -1,0 +1,6 @@
+*.pth
+*.ckpt
+*.jpg
+*.png
+*__pycache__
+*Pytorch_Retinaface
