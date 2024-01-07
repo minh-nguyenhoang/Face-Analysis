@@ -15,7 +15,10 @@ from torch.utils.data import DataLoader
 from src.utils.dataset import PixtaDataset
 from src.utils.loss import multi_task_loss
 import timm
+<<<<<<< HEAD
 from tqdm import tqdm
+=======
+>>>>>>> 3f64364 (add train and main and dataset)
 
 def checkpoint_filter_fn(state_dict, model):
     """ Remap FB checkpoints -> timm """
@@ -78,6 +81,7 @@ if __name__ == "__main__":
   
   epochs = args.epochs
   batch_size = args.bs
+<<<<<<< HEAD
   train_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
                        csv_file='/kaggle/input/cropped-face-ai-hackathon/train.csv', phase='train')
   test_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
@@ -104,3 +108,31 @@ if __name__ == "__main__":
     
   
   
+=======
+  train_dataset = PixtaDataset(root='src/data/cropped_data',
+                       csv_file='src/data/train.csv', phase='train')
+  test_dataset = PixtaDataset(root='src/data/cropped_data',
+                       csv_file='src/data/test.csv', phase='test')
+  
+  train_dl = DataLoader(train_dataset, batch_size, num_workers=16)
+  test_dl = DataLoader(test_dataset, batch_size, num_workers=4)
+  
+  backbone = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=False)
+  checkpoint = torch.load('convnext_base_22k_1k_224.pth')
+  checkpoint = checkpoint_filter_fn(checkpoint['model'],backbone)
+  backbone.load_state_dict(checkpoint)
+  # print(backbone)
+  backbone.head = nn.Identity()
+  loss_func = multi_task_loss()
+
+  model = BioNet(backbone, 1024, 512)
+  model.to(device)
+#   for x, _, _, _, _, _, _ in train_dl:
+#     x = x.cuda()
+#     print(model(x))
+  
+  trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='', device=device)
+    
+  
+  
+>>>>>>> 3f64364 (add train and main and dataset)
