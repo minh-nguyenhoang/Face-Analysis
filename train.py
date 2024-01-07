@@ -8,15 +8,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def loss_batch(model, loss_func, xb, yb, opt=None, metric=None, device='cuda'):
+def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt=None, metric=None, device='cpu'):
     # Generate predictions
-    yb = yb.to(device)
+    age, gender, masked, emotion, race, skin = age.to(device), gender.to(device), masked.to(device), emotion.to(device), race.to(device), skin.to(device)
     xb = xb.to(device)
     out = model(xb)
     # print(yb)
     # Calculate loss
     
-    loss = loss_func(xb,yb)
+    loss = loss_func(out, age, gender, masked, emotion, race, skin)
     # print(loss)
     if opt is not None:
         # Compute gradients
@@ -28,7 +28,8 @@ def loss_batch(model, loss_func, xb, yb, opt=None, metric=None, device='cuda'):
     metric_result = None
     if metric is not None:
         # Compute the metric
-        metric_result = metric(out, yb)
+        print(metric)
+        metric_result = metric(out, age, gender, masked, emotion, race, skin)
     return loss.item(), len(xb), metric_result
 
 
@@ -49,26 +50,41 @@ def evaluate(model, loss_func, valid_dl, metric=None):
     return avg_loss, total, avg_metric
 
 
-def accuracy(outputs, y_true, label_names):
-    _, y_pred = torch.max(outputs, dim=1)
-    print(classification_report(y_true, y_pred,target_names=label_names))
-    return accuracy_score(y_true, y_pred)
+def accuracy(outputs, age, gender, masked, emotion, race, skin):
+    out_age, out_gender, out_masked, out_emotion, out_race, out_skin = outputs
 
-def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, metric=None, PATH=''):
+    age_pred = torch.sum(out_age > 0.5, dim=1)
+    age = torch.sum(age, dim=1)
+    gender_pred = torch.argmax(out_gender, dim=1) 
+    masked_pred = torch.argmax(out_masked, dim=1)
+    emotion_pred = torch.argmax(out_emotion, dim=1)
+    race_pred = torch.argmax(out_race, dim=1)
+    skin_pred = torch.argmax(out_skin, dim=1)
+    
+    age_acc = torch.mean( (age_pred == age).float())
+    gender_acc = torch.mean(gender_pred == gender)
+    masked_acc = torch.mean(masked_pred == masked)
+    emotion_acc = torch.mean(emotion_pred == emotion)
+    race_acc = torch.mean(race_pred == race)
+    skin_acc = torch.mean(skin_pred == skin)
+
+    return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6
+
+def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, metric=accuracy, PATH='', device='cpu'):
     train_losses, val_losses, val_metrics = [], [], []
     max_val_acc = 0
     torch.cuda.empty_cache()
     # Instantiate the optimizer
     if opt_fn is None:
-        opt_fn = torch.optim.SGD
+        opt_fn = torch.optim.Adam
     opt = opt_fn(model.parameters(),lr=lr,weight_decay=1e-4)
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=opt, mode='min', patience= 8, min_lr =1e-4, verbose=True)
 
     for epoch in range(epochs):
         # Training
         model.train()
-        for xb, yb in tqdm(train_dl):
-            train_loss, pb_loss, dist_loss,_,_ = loss_batch(model, loss_func, xb, yb, opt)
+        for xb, age, gender, masked, emotion, race, skin in tqdm(train_dl):
+            train_loss = loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt, metric=metric, device=device)
             # print(train_loss)
         # Evaluation
         model.eval()
@@ -86,10 +102,10 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
         
         # Print progress
         if metric is None:
-            messages = 'Epoch [{} / {}], train_loss: {:4f}, pb_loss: {:4f}, dist_loss: {:4f}'\
-                  .format(epoch + 1, epochs, train_loss, pb_loss, dist_loss)
+            messages = 'Epoch [{} / {}], train_loss: {:4f}'\
+                  .format(epoch + 1, epochs, train_loss)
         else:
             messages = 'Epoch [{} / {}], train_loss: {:4f}, val_loss:{:4f}, val_{}: {:4f}'\
                   .format(epoch + 1, epochs, train_loss, val_loss, metric.__name__, val_metric)
-        logger.info(messages)
+        # logger.info(messages)
     return train_losses, val_losses, val_metrics

@@ -17,7 +17,7 @@ class BioNet(nn.Module):
 
         self.cfc = CFC(in_channels, out_channels, n_attributes)
 
-        self.age_branch = CORAL(in_features=out_channels, out_features=5)
+        self.age_branch = CORAL(in_features=out_channels, out_features=6)
 
         self.race_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
@@ -41,7 +41,7 @@ class BioNet(nn.Module):
             nn.Linear(out_channels, 512),
             nn.ReLU(),
             nn.LayerNorm(512),
-            nn.Linear(512, 5)
+            nn.Linear(512, 6)
         )
         self.skintone_branch = nn.Sequential(
             nn.Linear(out_channels, 512),

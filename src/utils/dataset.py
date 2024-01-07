@@ -39,7 +39,7 @@ class PixtaDataset(Dataset):
                                             ])
         # self.transform = transform
         
-        self.age_map = {'Kid': 0, 'Teenager': 1,'Senior': 3,'20-30s': 2,'40-50s': 4}
+        self.age_map = {'Baby':0, 'Kid': 1, 'Teenager': 2,'Senior': 4,'20-30s': 3,'40-50s': 5}
         self.race_map = {
             'Mongoloid': 0,
             'Caucasian': 1,
@@ -60,8 +60,12 @@ class PixtaDataset(Dataset):
             'Neutral':1,
             'Sadness':2,
             'Anger':3,
+<<<<<<< HEAD
             'Surprise':4,
             'Fear': 5
+=======
+            'Surprise':4
+>>>>>>> 3f64364 (add train and main and dataset)
         }
         self.gender_map = {
             'Male':0,
@@ -89,8 +93,12 @@ class PixtaDataset(Dataset):
         img = cv2.imread(img_path)
         
         img = self.__transform__(img)
+<<<<<<< HEAD
         # age = self.age_map['Kid']
         age = torch.tensor([1]*(self.age_map[self.metadata.iloc[index]['age']]) + [0]*(len(self.age_map.values()) - self.age_map[self.metadata.iloc[index]['age']])).float()
+=======
+        age = self.age_map['Kid']
+>>>>>>> 3f64364 (add train and main and dataset)
         gender = self.gender_map[self.metadata.iloc[index]['gender']]
         masked = self.masked_map[self.metadata.iloc[index]['masked']]
         emotion = self.emotion_map[self.metadata.iloc[index]['emotion']]
@@ -99,4 +107,10 @@ class PixtaDataset(Dataset):
         
         return img, age, gender, masked, emotion, race, skin
     
+<<<<<<< HEAD
 
+=======
+if __name__ == "__main__":
+    dts = PixtaDataset(root='Face-Analysis/src/data/cropped_data',
+                       csv_file='Face-Analysis/src/data/label_cropped.csv')
+>>>>>>> 3f64364 (add train and main and dataset)
