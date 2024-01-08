@@ -28,6 +28,7 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     metric_result = None
     if metric is not None:
         # Compute the metric
+        print(metric)
         metric_result = metric(out, age, gender, masked, emotion, race, skin)
     return loss.item(), len(xb), metric_result
 
@@ -106,5 +107,5 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
         else:
             messages = 'Epoch [{} / {}], train_loss: {:4f}, val_loss:{:4f}, val_{}: {:4f}'\
                   .format(epoch + 1, epochs, train_loss, val_loss, metric.__name__, val_metric)
-        logger.info(messages)
+        # logger.info(messages)
     return train_losses, val_losses, val_metrics
