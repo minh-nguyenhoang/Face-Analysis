@@ -39,7 +39,7 @@ class PixtaDataset(Dataset):
                                             ])
         # self.transform = transform
         
-        self.age_map = {'Kid': 0, 'Teenager': 1,'Senior': 2,'20-30s': 3,'40-50s': 4}
+        self.age_map = {'Kid': 0, 'Teenager': 1,'Senior': 3,'20-30s': 2,'40-50s': 4}
         self.race_map = {
             'Mongoloid': 0,
             'Caucasian': 1,

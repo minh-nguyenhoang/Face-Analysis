@@ -4,7 +4,7 @@ import torch.nn as nn
 class multi_task_loss(nn.Module):
     def __init__(self):
         super().__init__()
-        self.age_loss = nn.CrossEntropyLoss()
+        self.age_loss = nn.BCELoss()
         self.gender_loss = nn.BCELoss()
         self.masked_loss = nn.BCELoss()
         self.race_loss = nn.CrossEntropyLoss()

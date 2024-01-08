@@ -8,15 +8,15 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def loss_batch(model, loss_func, xb, yb, opt=None, metric=None, device='cuda'):
+def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt=None, metric=None, device='cuda'):
     # Generate predictions
-    yb = yb.to(device)
+    age, gender, masked, emotion, race, skin = age.to(device), gender.to(device), masked.to(device), emotion.to(device), race.to(device), skin.to(device)
     xb = xb.to(device)
     out = model(xb)
     # print(yb)
     # Calculate loss
     
-    loss = loss_func(xb,yb)
+    loss = loss_func(xb,age, gender, masked, emotion, race, skin)
     # print(loss)
     if opt is not None:
         # Compute gradients
@@ -67,8 +67,8 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
     for epoch in range(epochs):
         # Training
         model.train()
-        for xb, yb in tqdm(train_dl):
-            train_loss, pb_loss, dist_loss,_,_ = loss_batch(model, loss_func, xb, yb, opt)
+        for xb, age, gender, masked, emotion, race, skin in tqdm(train_dl):
+            train_loss, pb_loss, dist_loss,_,_ = loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt)
             # print(train_loss)
         # Evaluation
         model.eval()
