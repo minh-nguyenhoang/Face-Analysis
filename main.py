@@ -92,9 +92,9 @@ if __name__ == "__main__":
   # print(backbone)
   backbone.head = nn.Identity()
   model = BioNet(backbone, 1024, 512)
-  model.to('cuda:2')
+  model.cuda()
   for x, _, _, _, _, _, _ in train_dl:
-    x = x.to('cuda:2')
+    x = x.cuda()
     print(model(x))
     
   
