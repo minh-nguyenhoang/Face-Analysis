@@ -47,7 +47,7 @@ class BioNet(nn.Module):
             nn.Linear(out_channels, 512),
             nn.ReLU(),
             nn.LayerNorm(512),
-            nn.Linear(512, 3)
+            nn.Linear(512, 4)
         )
 
     def forward(self, x):
