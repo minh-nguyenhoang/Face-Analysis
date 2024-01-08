@@ -46,7 +46,7 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None):
         avg_loss = np.sum(np.multiply(np.array(losses), np.array(nums))) / total
         if metric is not None:
             # Avg of metric across batches
-            avg_metric = np.sum(np.multiply(torch.cat(metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+            avg_metric = np.sum(np.multiply(torch.stack(metrics,dim=0).cpu().numpy(), np.array(nums))) / total
     return avg_loss, total, avg_metric
 
 
