@@ -83,7 +83,7 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
     for epoch in range(epochs):
         # Training
         model.train()
-        for idx, xb, age, gender, masked, emotion, race, skin in tqdm(enumerate(train_dl)):
+        for idx, (xb, age, gender, masked, emotion, race, skin) in tqdm(enumerate(train_dl)):
             train_loss = loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt, metric=metric, device=device)
             if idx == 50:
                 model.eval()
