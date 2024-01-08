@@ -36,10 +36,10 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
 def evaluate(model, loss_func, valid_dl, metric=None):
     with torch.no_grad():
         # Pass each batch through the model
-        results = [loss_batch(model, loss_func, xb, yb, metric=metric)
-                   for xb, yb in valid_dl]
+        results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric)
+                   for xb, age, gender, masked, emotion, race, skin in valid_dl]
         # Separate losses, counts and metrics
-        losses, ob_loss, dist_loss, nums, metrics = zip(*results)
+        losses, nums, metrics = zip(*results)
         # Total size of the data set
         total = np.sum(nums)
         # Avg, loss across batches
