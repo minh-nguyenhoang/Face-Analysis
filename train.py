@@ -43,10 +43,10 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None):
         # Total size of the data set
         total = np.sum(nums)
         # Avg, loss across batches
-        avg_loss = np.sum(np.multiply(losses, nums)) / total
+        avg_loss = np.sum(np.multiply(losses.cpu(), nums.cpu())) / total
         if metric is not None:
             # Avg of metric across batches
-            avg_metric = np.sum(np.multiply(metrics, nums)) / total
+            avg_metric = np.sum(np.multiply(metrics.cpu(), nums.cpu())) / total
     return avg_loss, total, avg_metric
 
 
