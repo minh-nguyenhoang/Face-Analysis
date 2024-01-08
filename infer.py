@@ -20,6 +20,7 @@ import json
 from typing import Dict, Any
 from src.utils import RetinaFace
 from src.utils.data_process.letterbox import letterbox
+from src.utils.label_mapping import LabelMapping
 
 
 class TestDataset(Dataset):
@@ -115,12 +116,27 @@ def main(args):
 
         with torch.no_grad():
             age, race, gender, mask, emotion, skintone = net(images)
-            ages.extend(age.tolist())
-            races.extend(race.tolist())
-            genders.extend(gender.tolist())
-            masks.extend(mask.tolist())
-            emotions.extend(emotion.tolist())
-            skintones.extend(skintone.tolist())
+
+            age = torch.sum(age > 0.5, dim =1)
+            race = torch.argmax(race, dim = 1)
+            gender = torch.argmax(gender, dim = 1)
+            mask = torch.argmax(mask, dim = 1)
+            emotion = torch.argmax(emotion, dim = 1)
+            skintone = torch.argmax(skintone, dim = 1)
+
+            age_pred = LabelMapping.age_map_rev[age]
+            race_pred = LabelMapping.race_map_rev[race]
+            gender_pred = LabelMapping.gender_map_rev[gender]
+            mask_pred = LabelMapping.masked_map_rev[mask]
+            emotion_pred = LabelMapping.emotion_map_rev[emotion]
+            skintone_pred = LabelMapping.skintone_map_rev[skintone]
+
+            ages.extend(age_pred.tolist())
+            races.extend(race_pred.tolist())
+            genders.extend(gender_pred.tolist())
+            masks.extend(mask_pred.tolist())
+            emotions.extend(emotion_pred.tolist())
+            skintones.extend(skintone_pred.tolist())
 
     
     submission_file = pd.DataFrame()
@@ -136,6 +152,9 @@ def main(args):
 
     submission_file.to_csv('answer.csv', sep= ',')
 
+
+if __name__ == 'main':
+    main()
 
 
 
