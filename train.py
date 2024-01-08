@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt=None, metric=None, device='cuda'):
+def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt=None, metric=None, device='cpu'):
     # Generate predictions
     age, gender, masked, emotion, race, skin = age.to(device), gender.to(device), masked.to(device), emotion.to(device), race.to(device), skin.to(device)
     xb = xb.to(device)

@@ -95,7 +95,7 @@ if __name__ == "__main__":
   loss_func = multi_task_loss()
 
   model = BioNet(backbone, 1024, 512)
-  model.cuda()
+  model.to(device)
 #   for x, _, _, _, _, _, _ in train_dl:
 #     x = x.cuda()
 #     print(model(x))
