@@ -33,10 +33,10 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     return loss.item(), len(xb), metric_result
 
 
-def evaluate(model, loss_func, valid_dl, metric=None):
+def evaluate(model, loss_func, valid_dl, metric=None, device=None):
     with torch.no_grad():
         # Pass each batch through the model
-        results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric)
+        results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric, device=device)
                    for xb, age, gender, masked, emotion, race, skin in valid_dl]
         # Separate losses, counts and metrics
         losses, nums, metrics = zip(*results)
@@ -83,11 +83,11 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
     for epoch in range(epochs):
         # Training
         model.train()
-        for idx, (xb, age, gender, masked, emotion, race, skin) in tqdm(enumerate(train_dl)):
+        for idx, (xb, age, gender, masked, emotion, race, skin) in enumerate(tqdm(train_dl)):
             train_loss = loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt, metric=metric, device=device)
             if idx == 50:
                 model.eval()
-                result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric)
+                result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device)
                 model.train()
         # Evaluation
         model.eval()
