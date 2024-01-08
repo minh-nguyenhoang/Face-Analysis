@@ -100,7 +100,7 @@ if __name__ == "__main__":
 #     x = x.cuda()
 #     print(model(x))
   
-  trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='')
+  trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='', device=device)
     
   
   
