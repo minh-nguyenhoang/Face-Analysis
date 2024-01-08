@@ -60,7 +60,8 @@ class PixtaDataset(Dataset):
             'Neutral':1,
             'Sadness':2,
             'Anger':3,
-            'Surprise':4
+            'Surprise':4,
+            'Fear': 5
         }
         self.gender_map = {
             'Male':0,
