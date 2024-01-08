@@ -40,6 +40,7 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None):
                    for xb, age, gender, masked, emotion, race, skin in valid_dl]
         # Separate losses, counts and metrics
         losses, nums, metrics = zip(*results)
+        print(losses)
         # Total size of the data set
         total = np.sum(nums)
         # Avg, loss across batches
