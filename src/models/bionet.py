@@ -41,7 +41,7 @@ class BioNet(nn.Module):
             nn.Linear(out_channels, 512),
             nn.ReLU(),
             nn.LayerNorm(512),
-            nn.Linear(512, 5)
+            nn.Linear(512, 6)
         )
         self.skintone_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
