@@ -92,11 +92,15 @@ if __name__ == "__main__":
   # backbone.load_state_dict(checkpoint)
   # print(backbone)
   backbone.head = nn.Identity()
+  loss_func = multi_task_loss()
+
   model = BioNet(backbone, 1024, 512)
   model.cuda()
-  for x, _, _, _, _, _, _ in train_dl:
-    x = x.cuda()
-    print(model(x))
+#   for x, _, _, _, _, _, _ in train_dl:
+#     x = x.cuda()
+#     print(model(x))
+  
+  trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='')
     
   
   
