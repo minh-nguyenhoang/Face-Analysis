@@ -16,7 +16,7 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     # print(yb)
     # Calculate loss
     
-    loss = loss_func(xb,age, gender, masked, emotion, race, skin)
+    loss = loss_func(out, age, gender, masked, emotion, race, skin)
     # print(loss)
     if opt is not None:
         # Compute gradients
@@ -28,7 +28,7 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     metric_result = None
     if metric is not None:
         # Compute the metric
-        metric_result = metric(out, yb)
+        metric_result = metric(out, age, gender, masked, emotion, race, skin)
     return loss.item(), len(xb), metric_result
 
 
@@ -49,10 +49,25 @@ def evaluate(model, loss_func, valid_dl, metric=None):
     return avg_loss, total, avg_metric
 
 
-def accuracy(outputs, y_true, label_names):
-    _, y_pred = torch.max(outputs, dim=1)
-    print(classification_report(y_true, y_pred,target_names=label_names))
-    return accuracy_score(y_true, y_pred)
+def accuracy(outputs, age, gender, masked, emotion, race, skin):
+    out_age, out_gender, out_masked, out_emotion, out_race, out_skin = outputs
+
+    age_pred = torch.sum(out_age > 0.5, dim=1)
+    age = torch.sum(age, dim=1)
+    gender_pred = torch.argmax(out_gender, dim=1) 
+    masked_pred = torch.argmax(out_masked, dim=1)
+    emotion_pred = torch.argmax(out_emotion, dim=1)
+    race_pred = torch.argmax(out_race, dim=1)
+    skin_pred = torch.argmax(out_skin, dim=1)
+    
+    age_acc = torch.mean(age_pred == age)
+    gender_acc = torch.mean(gender_pred == gender)
+    masked_acc = torch.mean(masked_pred == age)
+    emotion_acc = torch.mean(emotion_pred == emotion)
+    race_acc = torch.mean(race_pred == race)
+    skin_acc = torch.mean(skin_pred == skin)
+
+    return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6
 
 def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, metric=None, PATH=''):
     train_losses, val_losses, val_metrics = [], [], []
@@ -86,8 +101,8 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
         
         # Print progress
         if metric is None:
-            messages = 'Epoch [{} / {}], train_loss: {:4f}, pb_loss: {:4f}, dist_loss: {:4f}'\
-                  .format(epoch + 1, epochs, train_loss, pb_loss, dist_loss)
+            messages = 'Epoch [{} / {}], train_loss: {:4f}'\
+                  .format(epoch + 1, epochs, train_loss)
         else:
             messages = 'Epoch [{} / {}], train_loss: {:4f}, val_loss:{:4f}, val_{}: {:4f}'\
                   .format(epoch + 1, epochs, train_loss, val_loss, metric.__name__, val_metric)
