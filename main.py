@@ -77,16 +77,16 @@ if __name__ == "__main__":
   
   epochs = args.epochs
   batch_size = args.bs
-  train_dataset = PixtaDataset(root='src/data/cropped_data',
+  train_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data',
                        csv_file='src/data/train.csv', phase='train')
   test_dataset = PixtaDataset(root='src/data/cropped_data',
                        csv_file='src/data/test.csv', phase='test')
   
-  train_dl = DataLoader(train_dataset, batch_size, num_workers=16)
+  train_dl = DataLoader(train_dataset, batch_size, num_workers=4)
   test_dl = DataLoader(test_dataset, batch_size, num_workers=4)
   
-  backbone = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=False)
-  checkpoint = torch.load('convnext_base_22k_1k_224.pth')
+  backbone = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True)
+  # checkpoint = torch.load('convnext_base_22k_1k_224.pth')
   checkpoint = checkpoint_filter_fn(checkpoint['model'],backbone)
   backbone.load_state_dict(checkpoint)
   # print(backbone)
