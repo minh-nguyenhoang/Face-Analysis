@@ -80,7 +80,7 @@ if __name__ == "__main__":
   batch_size = args.bs
   train_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
                        csv_file='/kaggle/input/cropped-face-ai-hackathon/train.csv', phase='train')
-  test_dataset = PixtaDataset(root='src/data/cropped_data',
+  test_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
                        csv_file='/kaggle/input/cropped-face-ai-hackathon/test.csv', phase='test')
   
   train_dl = DataLoader(train_dataset, batch_size, num_workers=4)
