@@ -15,7 +15,7 @@ class multi_task_loss(nn.Module):
     def forward(self, x, age, gender, masked, emotion, race, skin):
         age_pred, race_pred, gender_pred, mask_pred, emotion_pred, skintone_pred = x
         loss_1 = self.age_loss(age_pred, age)
-        loss_2 = self.gender_loss(gender_pred, gender)
+        loss_2 = self.gender_loss(gender_pred.unsqueeze(1), gender)
         loss_3 = self.masked_loss(mask_pred, masked)
         loss_4 = self.race_loss(race_pred, race)
         loss_5 = self.skin_loss(skintone_pred, skin)
