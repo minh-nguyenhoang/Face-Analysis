@@ -7,7 +7,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data.dataloader import DataLoader
 import argparse
 from src.models.bionet import *
-from train import *
+from train import trainer, accuracy
 import logging
 import json
 from torch.utils.data import DataLoader
@@ -80,7 +80,7 @@ if __name__ == "__main__":
   batch_size = args.bs
   train_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
                        csv_file='/kaggle/input/cropped-face-ai-hackathon/train.csv', phase='train')
-  test_dataset = PixtaDataset(root='src/data/cropped_data',
+  test_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
                        csv_file='/kaggle/input/cropped-face-ai-hackathon/test.csv', phase='test')
   
   train_dl = DataLoader(train_dataset, batch_size, num_workers=4)
@@ -95,12 +95,12 @@ if __name__ == "__main__":
   loss_func = multi_task_loss()
 
   model = BioNet(backbone, 1024, 512)
-  model.cuda()
+  model.to(device)
 #   for x, _, _, _, _, _, _ in train_dl:
 #     x = x.cuda()
 #     print(model(x))
   
-  trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='')
+  trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='', device=device)
     
   
   
