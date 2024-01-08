@@ -28,7 +28,7 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     metric_result = None
     if metric is not None:
         # Compute the metric
-        print(metric)
+        # print(metric)
         metric_result = metric(out, age, gender, masked, emotion, race, skin)
     return loss.item(), len(xb), metric_result
 
