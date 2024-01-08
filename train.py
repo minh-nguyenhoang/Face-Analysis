@@ -63,7 +63,7 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin):
     
     age_acc = torch.mean(age_pred == age)
     gender_acc = torch.mean(gender_pred == gender)
-    masked_acc = torch.mean(masked_pred == age)
+    masked_acc = torch.mean(masked_pred == masked)
     emotion_acc = torch.mean(emotion_pred == emotion)
     race_acc = torch.mean(race_pred == race)
     skin_acc = torch.mean(skin_pred == skin)
