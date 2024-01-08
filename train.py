@@ -69,7 +69,7 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin):
 
     return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6
 
-def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, metric=None, PATH='', device='cpu'):
+def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, metric=accuracy, PATH='', device='cpu'):
     train_losses, val_losses, val_metrics = [], [], []
     max_val_acc = 0
     torch.cuda.empty_cache()
