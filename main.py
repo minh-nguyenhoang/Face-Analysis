@@ -95,7 +95,7 @@ if __name__ == "__main__":
   test_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
                        csv_file='/kaggle/input/cropped-face-ai-hackathon/test.csv', phase='test')
   
-  train_dl = DataLoader(train_dataset, batch_size, num_workers=16)
+  train_dl = DataLoader(train_dataset, batch_size, num_workers=4)
   test_dl = DataLoader(test_dataset, batch_size, num_workers=4)
   
   backbone = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True)
