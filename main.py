@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader
 from src.utils.dataset import PixtaDataset
 from src.utils.loss import multi_task_loss
 import timm
+from tqdm import tqdm
 
 def checkpoint_filter_fn(state_dict, model):
     """ Remap FB checkpoints -> timm """
