@@ -40,14 +40,13 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None):
                    for xb, age, gender, masked, emotion, race, skin in valid_dl]
         # Separate losses, counts and metrics
         losses, nums, metrics = zip(*results)
-        print(losses)
         # Total size of the data set
         total = np.sum(nums)
         # Avg, loss across batches
-        avg_loss = np.sum(np.multiply(losses.cpu(), nums.cpu())) / total
+        avg_loss = np.sum(np.multiply(np.array(losses), np.array(nums))) / total
         if metric is not None:
             # Avg of metric across batches
-            avg_metric = np.sum(np.multiply(metrics.cpu(), nums.cpu())) / total
+            avg_metric = np.sum(np.multiply(torch.cat(metrics,dim=0).cpu().numpy(), np.array(nums))) / total
     return avg_loss, total, avg_metric
 
 
