@@ -74,6 +74,9 @@ class BioNet(nn.Module):
             device = next(backbone.parameters()).device
             inputs = torch.rand(input_shape).to(device)
 
+        if inputs.ndim == 3:
+            inputs = inputs.unsqueeze(0)
+
         train_state = backbone.training
 
         backbone.eval()
