@@ -87,8 +87,8 @@ if __name__ == "__main__":
   
   backbone = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True)
   # checkpoint = torch.load('convnext_base_22k_1k_224.pth')
-  checkpoint = checkpoint_filter_fn(checkpoint['model'],backbone)
-  backbone.load_state_dict(checkpoint)
+  # checkpoint = checkpoint_filter_fn(checkpoint['model'],backbone)
+  # backbone.load_state_dict(checkpoint)
   # print(backbone)
   backbone.head = nn.Identity()
   model = BioNet(backbone, 1024, 512)
