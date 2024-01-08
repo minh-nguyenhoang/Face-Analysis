@@ -52,7 +52,7 @@ def evaluate(model, loss_func, valid_dl, metric=None):
 def accuracy(outputs, y_true, label_names):
     _, y_pred = torch.max(outputs, dim=1)
     print(classification_report(y_true, y_pred,target_names=label_names))
-    # return torch.tensor(torch.sum(y_pred == y_true).item() / len(y_pred))
+    return accuracy_score(y_true, y_pred)
 
 def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, metric=None, PATH=''):
     train_losses, val_losses, val_metrics = [], [], []
@@ -77,7 +77,7 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
         sched.step(val_loss)
 
         if max_val_acc < val_metric:
-          torch.save(model.state_dict(), PATH + 'best_corrector.pth')
+          torch.save(model.state_dict(), PATH + 'best_model.pth')
 
         # Record the loss and metric
         train_losses.append(train_loss)
