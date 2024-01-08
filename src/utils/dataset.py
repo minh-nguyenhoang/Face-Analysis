@@ -39,7 +39,7 @@ class PixtaDataset(Dataset):
                                             ])
         # self.transform = transform
         
-        self.age_map = {'Kid': 0, 'Teenager': 1,'Senior': 2,'20-30s': 3,'40-50s': 4}
+        self.age_map = {'Kid': 0, 'Teenager': 1,'Senior': 3,'20-30s': 2,'40-50s': 4}
         self.race_map = {
             'Mongoloid': 0,
             'Caucasian': 1,
@@ -89,7 +89,8 @@ class PixtaDataset(Dataset):
         img = cv2.imread(img_path)
         
         img = self.__transform__(img)
-        age = self.age_map['Kid']
+        # age = self.age_map['Kid']
+        age = torch.tensor([1]*(self.age_map[self.metadata.iloc[index]['age']]) + [0]*(len(self.age_map.values()) - self.age_map[self.metadata.iloc[index]['age']])).float()
         gender = self.gender_map[self.metadata.iloc[index]['gender']]
         masked = self.masked_map[self.metadata.iloc[index]['masked']]
         emotion = self.emotion_map[self.metadata.iloc[index]['emotion']]
@@ -98,46 +99,4 @@ class PixtaDataset(Dataset):
         
         return img, age, gender, masked, emotion, race, skin
     
-if __name__ == "__main__":
-    dts = PixtaDataset(root='Face-Analysis/src/data/cropped_data',
-                       csv_file='Face-Analysis/sfrom torch.utils.data import Dataset, DataLoader
-import albumentations
-import torch
-from .data_process.letterbox import letterbox
-import pandas as pd
-import os
-import cv2
 
-
-class PixtaDataset(Dataset):
-    def __init__(self, 
-                 root = '.',
-                 csv_file = '',
-                 img_size = (224,224),
-                 transform = None,) -> None:
-        super().__init__()
-
-        self.root = root
-        self.img_size = img_size
-
-        try:
-            self.metadata = pd.read_csv(os.path.join(root, csv_file))
-            self.metadata_path = os.path.join(root, csv_file)
-        except:
-            try:
-                self.metadata = pd.read_csv(csv_file)
-                self.metadata_path = csv_file
-            except Exception as e:
-                raise e
-            
-
-        self.transform = transform
-
-    def __len_(self):
-        return len(self.metadata)
-    
-    def __getitem__(self, index):
-
-        
-
-        return 
