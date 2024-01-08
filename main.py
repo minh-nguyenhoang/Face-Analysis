@@ -7,7 +7,7 @@ from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.data.dataloader import DataLoader
 import argparse
 from src.models.bionet import *
-from train import *
+from train import trainer, accuracy
 import logging
 import json
 from torch.utils.data import DataLoader
