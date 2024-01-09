@@ -95,7 +95,7 @@ def main(args= None):
     net.eval()
 
     test_dataset = TestDataset(root= '/kaggle/input/pixte-public-test/public_test/public_test', json_file= '/kaggle/input/pixte-public-test/public_test_and_submission_guidelin/public_test_and_submission_guidelines/file_name_to_image_id.json')
-    test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 6)
+    test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 16)
 
     bboxes, ages, races, genders, masks, emotions, skintones = [], [], [], [], [], [], []
 
