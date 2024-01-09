@@ -20,4 +20,4 @@ class multi_task_loss(nn.Module):
         loss_4 = self.race_loss(race_pred, race)
         loss_5 = self.skin_loss(skintone_pred, skin)
         loss_6 = self.emo_loss(emotion_pred, emotion)
-        return torch.mean(loss_1 + loss_2 + loss_3 + loss_4 + loss_5 + loss_6)
+        return (loss_1 + loss_2 + loss_3 + loss_4 + loss_5 + loss_6) / 6

@@ -62,10 +62,8 @@ class PixtaDataset(Dataset):
             'Anger':3,
 <<<<<<< HEAD
             'Surprise':4,
-            'Fear': 5
-=======
-            'Surprise':4
->>>>>>> 3f64364 (add train and main and dataset)
+            'Fear': 5,
+            'Disgust': 6
         }
         self.gender_map = {
             'Male':0,
@@ -93,8 +91,6 @@ class PixtaDataset(Dataset):
         img = cv2.imread(img_path)
         
         img = self.__transform__(img)
-<<<<<<< HEAD
-        # age = self.age_map['Kid']
         age = torch.tensor([1]*(self.age_map[self.metadata.iloc[index]['age']]) + [0]*(len(self.age_map.values()) - self.age_map[self.metadata.iloc[index]['age']])).float()
 =======
         age = self.age_map['Kid']

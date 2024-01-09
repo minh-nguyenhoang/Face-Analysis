@@ -28,25 +28,25 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     metric_result = None
     if metric is not None:
         # Compute the metric
-        print(metric)
+        # print(metric)
         metric_result = metric(out, age, gender, masked, emotion, race, skin)
     return loss.item(), len(xb), metric_result
 
 
-def evaluate(model, loss_func, valid_dl, metric=None):
+def evaluate(model, loss_func, valid_dl, metric=None, device=None):
     with torch.no_grad():
         # Pass each batch through the model
-        results = [loss_batch(model, loss_func, xb, yb, metric=metric)
-                   for xb, yb in valid_dl]
+        results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric, device=device)
+                   for xb, age, gender, masked, emotion, race, skin in valid_dl]
         # Separate losses, counts and metrics
-        losses, ob_loss, dist_loss, nums, metrics = zip(*results)
+        losses, nums, metrics = zip(*results)
         # Total size of the data set
         total = np.sum(nums)
         # Avg, loss across batches
-        avg_loss = np.sum(np.multiply(losses, nums)) / total
+        avg_loss = np.sum(np.multiply(np.array(losses), np.array(nums))) / total
         if metric is not None:
             # Avg of metric across batches
-            avg_metric = np.sum(np.multiply(metrics, nums)) / total
+            avg_metric = np.sum(np.multiply(torch.stack(metrics,dim=0).cpu().numpy(), np.array(nums))) / total
     return avg_loss, total, avg_metric
 
 
@@ -62,11 +62,11 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin):
     skin_pred = torch.argmax(out_skin, dim=1)
     
     age_acc = torch.mean( (age_pred == age).float())
-    gender_acc = torch.mean(gender_pred == gender)
-    masked_acc = torch.mean(masked_pred == masked)
-    emotion_acc = torch.mean(emotion_pred == emotion)
-    race_acc = torch.mean(race_pred == race)
-    skin_acc = torch.mean(skin_pred == skin)
+    gender_acc = torch.mean((gender_pred == gender).float())
+    masked_acc = torch.mean((masked_pred == masked).float())
+    emotion_acc = torch.mean((emotion_pred == emotion).float())
+    race_acc = torch.mean((race_pred == race).float())
+    skin_acc = torch.mean((skin_pred == skin).float())
 
     return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6
 
@@ -83,12 +83,15 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
     for epoch in range(epochs):
         # Training
         model.train()
-        for xb, age, gender, masked, emotion, race, skin in tqdm(train_dl):
+        for idx, (xb, age, gender, masked, emotion, race, skin) in enumerate(tqdm(train_dl)):
             train_loss = loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt, metric=metric, device=device)
-            # print(train_loss)
+            # if (idx+1) %10 == 0:
+            #     model.eval()
+            #     result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device)
+            #     model.train()
         # Evaluation
         model.eval()
-        result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric)
+        result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device)
         val_loss, total, val_metric = result
         sched.step(val_loss)
 
