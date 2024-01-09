@@ -128,7 +128,7 @@ def main(args= None):
         xyxy = torch.tensor(np.array(corners)).sub(tl).div(scale).int() #[Bx4]
 
         tl_x, tl_y, br_x, br_y = zip(*xyxy)
-        xywh = torch.stack([np.array(tl_x), np.array(tl_y), np.array(br_x) - np.array(tl_x), np.array(br_y) - np.array(tl_y)], dim = -1)
+        xywh = torch.stack([torch.tensor(tl_x), torch.tensor(tl_y), torch.tensor(br_x) - torch.tensor(tl_x), torch.tensor(br_y) - torch.tensor(tl_y)], dim = -1)
 
         bboxes.extend(xywh.tolist())
 
