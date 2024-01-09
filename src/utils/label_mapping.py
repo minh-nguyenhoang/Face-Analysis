@@ -38,3 +38,4 @@ class LabelMapping:
             return attr
         else:
             setattr(self, __name, {v:k for k,v in zip(getattr(self, __name.rstrip("_rev")).items())})
+            return self.__getattribute__(__name)
