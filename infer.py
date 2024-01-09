@@ -108,7 +108,7 @@ def main(args= None):
 
         tl = tl.view(-1,2)
         tl = torch.cat([tl,tl], dim = 1)
-        scale = scale.view(-1)
+        scale = scale.view(-1, 1)
 
         '''
         Only take the first bbox found for each image (if any).
