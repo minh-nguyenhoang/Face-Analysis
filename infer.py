@@ -125,7 +125,12 @@ def main(args= None):
             else:
                 corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
 
-        bboxes.extend(torch.tensor(np.array(corners)).sub(tl).div(scale).int().tolist())
+        xyxy = torch.tensor(np.array(corners)).sub(tl).div(scale).int() #[Bx4]
+
+        tl_x, tl_y, br_x, br_y = zip(xyxy)
+        xywh = torch.stack([tl_x, tl_y, br_x - tl_x, br_y - tl_y], dim = -1)
+
+        bboxes.extend(xywh.tolist())
 
         images = torch.tensor(
             np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy()) for image, corner in zip(images, corners)])
