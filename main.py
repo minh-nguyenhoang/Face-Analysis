@@ -90,7 +90,6 @@ if __name__ == "__main__":
   
   epochs = args.epochs
   batch_size = args.bs
-<<<<<<< HEAD
   train_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
                        csv_file='/kaggle/input/cropped-face-ai-hackathon/train.csv', phase='train')
   test_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
