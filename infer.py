@@ -122,7 +122,7 @@ def main(args= None):
             if len(det) >0:
                 corners.append(det[0][0])
             else:
-                corners.append([*tl[idx], 1024 - tl[idx][0], 1024 - tl[idx][1]])
+                corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
             print(corners)
 
         bboxes.extend(torch.tensor(np.array(corners)).sub(tl).div(scale).int().tolist())
