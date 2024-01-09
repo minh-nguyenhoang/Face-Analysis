@@ -136,12 +136,12 @@ def main(args= None):
         emotion = torch.argmax(emotion, dim = 1)
         skintone = torch.argmax(skintone, dim = 1)
 
-        age_pred = LabelMapping.age_map_rev[age]
-        race_pred = LabelMapping.race_map_rev[race]
-        gender_pred = LabelMapping.gender_map_rev[gender]
-        mask_pred = LabelMapping.masked_map_rev[mask]
-        emotion_pred = LabelMapping.emotion_map_rev[emotion]
-        skintone_pred = LabelMapping.skintone_map_rev[skintone]
+        age_pred = LabelMapping.get('age_map_rev')[age]
+        race_pred = LabelMapping.get('race_map_rev')[race]
+        gender_pred = LabelMapping.get('gender_map_rev')[gender]
+        mask_pred = LabelMapping.get('masked_map_rev')[mask]
+        emotion_pred = LabelMapping.get('emotion_map_rev')[emotion]
+        skintone_pred = LabelMapping.get('skintone_map_rev')[skintone]
 
         ages.extend(age_pred.tolist())
         races.extend(race_pred.tolist())
