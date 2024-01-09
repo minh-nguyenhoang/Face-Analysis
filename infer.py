@@ -113,7 +113,8 @@ def main(args= None):
         Only take the first bbox found for each image (if any).
         Checked in public_test, each image only has 1 bbox. 
         '''
-        corners = face_detector(images)[..., 0, 0] # [Bx4]
+        dets = face_detector(images) # [Bx4]
+        corners = [det[0][0] for det in dets]
 
         bboxes.extend(torch.tensor(corners).sub(tl).div(scale).int().tolist())
 
