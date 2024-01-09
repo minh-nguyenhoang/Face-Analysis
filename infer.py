@@ -39,7 +39,7 @@ class TestDataset(Dataset):
             except Exception as e:
                 raise e
             
-        file_names, position = file.items()
+        file_names, position = zip(file.items())
 
         self.root = root
         self.file_names = file_names[(np.array(position)-1).tolist]
