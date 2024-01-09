@@ -62,8 +62,9 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin):
 
     age_pred = torch.sum(out_age > 0.5, dim=1)
     age = torch.sum(age, dim=1)
-    gender_pred = torch.argmax(out_gender, dim=1) 
-    masked_pred = torch.argmax(out_masked, dim=1)
+    gender_pred = torch.sigmoid(out_gender)  > 0.5
+    masked_pred = torch.sigmoid(out_masked)  > 0.5
+
     emotion_pred = torch.argmax(out_emotion, dim=1)
     race_pred = torch.argmax(out_race, dim=1)
     skin_pred = torch.argmax(out_skin, dim=1)
