@@ -32,10 +32,11 @@ class PixtaDataset(Dataset):
                 raise e
             
         
-        self.transform = transforms.Compose([transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.2, 0.2)],p = 0.5),
-                                            transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
-                                        #    transforms.RandomResizedCrop(224, scale = (0.9,1.0)),
-                                            # transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+        self.transform = transforms.Compose([
+            # transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.2, 0.2)],p = 0.5),
+                                            # transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
+                                        #    transforms.ToTensor(),
+                                            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
                                             ])
         # self.transform = transform
         
@@ -74,8 +75,8 @@ class PixtaDataset(Dataset):
         x = cv2.resize(x, (224,224))
         x = np.transpose(x, (2,1,0))
         x = torch.from_numpy(x).float()
-        if self.phase == 'train':
-            x = self.transform(x)
+       
+        x = self.transform(x)
         # x = x / 255.0
         return x
     

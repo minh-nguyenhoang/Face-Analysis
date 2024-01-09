@@ -29,8 +29,8 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     if metric is not None:
         # Compute the metric
         # print(metric)
-        metric_result = metric(out, age, gender, masked, emotion, race, skin)
-    return loss.item(), len(xb), metric_result
+        metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin)
+    return loss.item(), len(xb), metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc
 
 
 def evaluate(model, loss_func, valid_dl, metric=None, device=None):
@@ -39,7 +39,7 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None):
         results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric, device=device)
                    for xb, age, gender, masked, emotion, race, skin in valid_dl]
         # Separate losses, counts and metrics
-        losses, nums, metrics = zip(*results)
+        losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = zip(*results)
         # Total size of the data set
         total = np.sum(nums)
         # Avg, loss across batches
@@ -47,7 +47,14 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None):
         if metric is not None:
             # Avg of metric across batches
             avg_metric = np.sum(np.multiply(torch.stack(metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-    return avg_loss, total, avg_metric
+            avg_age_metric = np.sum(np.multiply(torch.stack(age_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+            avg_gender_metric = np.sum(np.multiply(torch.stack(gender_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+            avg_masked_metric = np.sum(np.multiply(torch.stack(masked_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+            avg_emotion_metric = np.sum(np.multiply(torch.stack(emotion_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+            avg_race_metric = np.sum(np.multiply(torch.stack(race_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+            avg_skin_metric = np.sum(np.multiply(torch.stack(skin_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+             
+    return avg_loss, total, avg_metric, avg_age_metric, avg_gender_metric, avg_masked_metric, avg_emotion_metric, avg_race_metric, avg_skin_metric
 
 
 def accuracy(outputs, age, gender, masked, emotion, race, skin):
@@ -68,10 +75,11 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin):
     race_acc = torch.mean((race_pred == race).float())
     skin_acc = torch.mean((skin_pred == skin).float())
 
-    return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6
+    return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc
 
 def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, metric=accuracy, PATH='', device='cpu'):
-    train_losses, val_losses, val_metrics = [], [], []
+    train_losses, train_metrics = [], []
+    val_losses, val_metrics = [], []
     max_val_acc = 0
     torch.cuda.empty_cache()
     # Instantiate the optimizer
@@ -81,34 +89,41 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
     sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=opt, mode='min', patience= 8, min_lr =1e-4, verbose=True)
 
     for epoch in range(epochs):
+        avg_loss = []
+        avg_train_metric = []
+        m_age_acc, m_gender_acc, m_masked_acc, m_emotion_acc, m_race_acc, m_skin_acc = [], [], [], [], [], []
         # Training
         model.train()
         for idx, (xb, age, gender, masked, emotion, race, skin) in enumerate(tqdm(train_dl)):
-            train_loss = loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt, metric=metric, device=device)
-            # if (idx+1) %10 == 0:
-            #     model.eval()
-            #     result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device)
-            #     model.train()
+            train_loss, nums, train_metric, _,_,_,_,_,_ = loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt, metric=metric, device=device)
+            avg_loss.append(train_loss)
+            avg_train_metric.append(train_metric)
+
         # Evaluation
+        mean_loss = torch.mean(torch.Tensor(avg_loss))
+        mean_metric = torch.mean(torch.Tensor(avg_train_metric))
+        
+        
         model.eval()
         result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device)
-        val_loss, total, val_metric = result
+        val_loss, total, val_metric, age_metric, gender_metric, masked_metric, emotion_metric, race_metric, skin_metric = result
         sched.step(val_loss)
 
         if max_val_acc < val_metric:
-          torch.save(model.state_dict(), PATH + 'best_model.pth')
+            torch.save(model.state_dict(), PATH + 'best_model.pth')
 
         # Record the loss and metric
-        train_losses.append(train_loss)
+        train_losses.append(mean_loss)
         val_losses.append(val_loss)
         val_metrics.append(val_metric)
-        
+        # print(train_loss)
         # Print progress
         if metric is None:
             messages = 'Epoch [{} / {}], train_loss: {:4f}'\
-                  .format(epoch + 1, epochs, train_loss)
+                .format(epoch + 1, epochs, train_loss)
         else:
-            messages = 'Epoch [{} / {}], train_loss: {:4f}, val_loss:{:4f}, val_{}: {:4f}'\
-                  .format(epoch + 1, epochs, train_loss, val_loss, metric.__name__, val_metric)
-        # logger.info(messages)
+            messages = 'Epoch [{} / {}], train_loss: {:4f}, train_metric: {:4f}, val_loss:{:4f}, val_{}: {:4f}, age_acc: {:4f}, gender_acc: {:4f}, masked_acc: {:4f}, emotion_acc: {:4f}, race_acc: {:4f}, skin_acc: {:4f}'\
+                .format(epoch + 1, epochs, mean_loss, mean_metric, val_loss, metric.__name__, val_metric, age_metric, gender_metric, masked_metric, emotion_metric, race_metric, skin_metric)
+            # logger.info(messages)
+        print(messages)
     return train_losses, val_losses, val_metrics

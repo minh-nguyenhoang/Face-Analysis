@@ -57,6 +57,18 @@ def checkpoint_filter_fn(state_dict, model):
         out_dict[k] = v
 
     return out_dict
+def checkpoint_dino_filter(state_dict, model):
+    pretrained_state_dict = state_dict
+    model_keys = model.state_dict().keys()
+
+    new_state_dict = {}
+    for k, v in pretrained_state_dict.items():
+      new_k = k.replace("backbone.model.", "")
+      if new_k in model_keys:
+        new_state_dict[new_k] = v
+    # print(len(new_student_state_dict.keys()))
+
+    return new_state_dict
   
 if __name__ == "__main__":
   # Experiment options
@@ -70,7 +82,7 @@ if __name__ == "__main__":
   parser.add_argument('-gpu', '--gpu_ids', type=str, default='0')
   parser.add_argument('--device', type=str, choices=['cuda', 'cpu'], default='cpu')
   parser.add_argument('--epochs', type=int, default=50, help='number of epoch(s) to train')
-  parser.add_argument('--lr', type=float, default=3e-3, help='learning rate to train')
+  parser.add_argument('--lr', type=float, default=1e-3, help='learning rate to train')
 
   args = parser.parse_args()
   
@@ -83,18 +95,20 @@ if __name__ == "__main__":
   test_dataset = PixtaDataset(root='/kaggle/input/cropped-face-ai-hackathon/cropped_data/cropped_data',
                        csv_file='/kaggle/input/cropped-face-ai-hackathon/test.csv', phase='test')
   
-  train_dl = DataLoader(train_dataset, batch_size, num_workers=4)
+  train_dl = DataLoader(train_dataset, batch_size, num_workers=16)
   test_dl = DataLoader(test_dataset, batch_size, num_workers=4)
   
   backbone = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True)
-  # checkpoint = torch.load('convnext_base_22k_1k_224.pth')
-  # checkpoint = checkpoint_filter_fn(checkpoint['model'],backbone)
-  # backbone.load_state_dict(checkpoint)
-  # print(backbone)
+#   checkpoint = torch.load('convnext_b_checkpoint.pth')
+  # print(checkpoint['teacher'].keys())
+#   new_checkpoint = checkpoint_dino_filter(checkpoint['teacher'],backbone)
+  # print(new_checkpoint.keys())
+#   backbone.load_state_dict(new_checkpoint, strict=False)
+#   print(backbone)
   backbone.head = nn.Identity()
   loss_func = multi_task_loss()
 
-  model = BioNet(backbone, 1024, 512)
+  model = BioNet(backbone, 1024, 512, fine_tune=True)
   model.to(device)
 #   for x, _, _, _, _, _, _ in train_dl:
 #     x = x.cuda()

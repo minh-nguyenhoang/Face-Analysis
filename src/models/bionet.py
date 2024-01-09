@@ -9,10 +9,13 @@ import timm
 
 # print(timm.list_models(pretrained=True))
 class BioNet(nn.Module):
-    def __init__(self, backbone: nn.Module, in_channels, out_channels:int = 512, n_attributes:int = 6) -> None:
+    def __init__(self, backbone: nn.Module, in_channels, out_channels:int = 512, n_attributes:int = 6, fine_tune=False) -> None:
         super().__init__()
+        
+        if fine_tune:
+            for param in backbone.parameters():
+                param.requires_grad = False
         self.vcn = backbone
-
         self.in_channels = in_channels
 
         self.cfc = CFC(in_channels, out_channels, n_attributes)
