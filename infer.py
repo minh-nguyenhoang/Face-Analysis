@@ -22,6 +22,7 @@ from src.utils import RetinaFace
 from src.utils.data_process.letterbox import letterbox
 from src.utils.label_mapping import LabelMapping
 import timm
+from tqdm.auto import tqdm
 
 
 class TestDataset(Dataset):
@@ -39,10 +40,10 @@ class TestDataset(Dataset):
             except Exception as e:
                 raise e
             
-        file_names, position = file.items()
+        file_names, position = zip(*file.items())
 
         self.root = root
-        self.file_names = file_names[(np.array(position)-1).tolist]
+        self.file_names = file_names
         self.position = position
         
 
@@ -81,7 +82,7 @@ def main(args= None):
 
     device = 'cuda'
 
-    face_detector = RetinaFace(network= 'mobilenet', device= device, gpu_id= None)
+    face_detector = RetinaFace(network= 'resnet50', device= device, gpu_id= None)
 
     backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True)
     backbone.head = nn.Identity()
@@ -89,16 +90,16 @@ def main(args= None):
     model = BioNet(backbone, 1024, 512)
     model.to(device)
     net: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,224,224))
-    # net.load_state_dict(...)
+    net.load_state_dict(torch.load('/kaggle/input/baseline-checkpoint/best_model.pth', map_location= 'cpu'))
     net = net.to(face_detector.device)
     net.eval()
 
     test_dataset = TestDataset(root= '/kaggle/input/pixte-public-test/public_test/public_test', json_file= '/kaggle/input/pixte-public-test/public_test_and_submission_guidelin/public_test_and_submission_guidelines/file_name_to_image_id.json')
-    test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 6)
+    test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 16)
 
     bboxes, ages, races, genders, masks, emotions, skintones = [], [], [], [], [], [], []
 
-    for idx, batch in enumerate(test_dataloader):
+    for idx, batch in enumerate(tqdm(test_dataloader)):
         '''
         tl should have size [Bx2]
         scale should have size [B]
@@ -107,20 +108,34 @@ def main(args= None):
         images = images.to(device) 
 
         tl = tl.view(-1,2)
-        scale = scale.view(-1)
+        tl = torch.cat([tl,tl], dim = 1)
+        scale = scale.view(-1, 1)
 
         '''
         Only take the first bbox found for each image (if any).
         Checked in public_test, each image only has 1 bbox. 
         '''
-        corners = face_detector(images)[..., 0, 0] # [Bx4]
+        dets = face_detector(images) # [Bx4]
+        corners = []
 
-        bboxes.extend(torch.tensor(corners).sub(tl).div(scale).int().tolist())
+        for idx, det in enumerate(dets):
+            if len(det) >0:
+                coord = det[0][0]
+                corners.append([min(max(0, coord[0]), 1024), min(max(0, coord[1]), 1024), min(max(0, coord[2]), 1024), min(max(0, coord[3]), 1024)])
+            else:
+                corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
+
+        xyxy = torch.tensor(np.array(corners)).sub(tl).div(scale).int() #[Bx4]
+
+        tl_x, tl_y, br_x, br_y = zip(*xyxy)
+        xywh = torch.stack([torch.tensor(tl_x), torch.tensor(tl_y), torch.tensor(br_x) - torch.tensor(tl_x), torch.tensor(br_y) - torch.tensor(tl_y)], dim = -1)
+
+        bboxes.extend(xywh.tolist())
 
         images = torch.tensor(
-            [letterbox(image[corner[0]:corner[2], corner[1]: corner[3]].cpu().numpy()) for image, corner in zip(images, corners)]
+            np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy()) for image, corner in zip(images, corners)])
             ).to(device)
-        images = images.permute(0,3,1,2).div(255).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1))
+        images = images.permute(0,3,1,2).div(255).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
 
 
 
@@ -133,19 +148,19 @@ def main(args= None):
         emotion = torch.argmax(emotion, dim = 1)
         skintone = torch.argmax(skintone, dim = 1)
 
-        age_pred = LabelMapping.age_map_rev[age]
-        race_pred = LabelMapping.race_map_rev[race]
-        gender_pred = LabelMapping.gender_map_rev[gender]
-        mask_pred = LabelMapping.masked_map_rev[mask]
-        emotion_pred = LabelMapping.emotion_map_rev[emotion]
-        skintone_pred = LabelMapping.skintone_map_rev[skintone]
+        age_pred = [LabelMapping.get('age_map_rev').get(a, None) for a in age.tolist()]
+        race_pred = [LabelMapping.get('race_map_rev').get(a, None) for a in race.tolist()]
+        gender_pred = [LabelMapping.get('gender_map_rev').get(a, None) for a in gender.tolist()]
+        mask_pred = [LabelMapping.get('masked_map_rev').get(a, None) for a in mask.tolist()]
+        emotion_pred = [LabelMapping.get('emotion_map_rev').get(a, None) for a in emotion.tolist()]
+        skintone_pred = [LabelMapping.get('skintone_map_rev').get(a, None) for a in skintone.tolist()]
 
-        ages.extend(age_pred.tolist())
-        races.extend(race_pred.tolist())
-        genders.extend(gender_pred.tolist())
-        masks.extend(mask_pred.tolist())
-        emotions.extend(emotion_pred.tolist())
-        skintones.extend(skintone_pred.tolist())
+        ages.extend(age_pred)
+        races.extend(race_pred)
+        genders.extend(gender_pred)
+        masks.extend(mask_pred)
+        emotions.extend(emotion_pred)
+        skintones.extend(skintone_pred)
 
     
     submission_file = pd.DataFrame()
@@ -159,7 +174,10 @@ def main(args= None):
     submission_file['skintone'] = pd.Series(skintones)
     submission_file['masked'] = pd.Series(masks)
 
-    submission_file.to_csv('answer.csv', sep= ',')
+    # submission_file.set_index('file_name')
+    submission_file['age'].fillna('20-30s')
+
+    submission_file.to_csv('answer.csv', sep= ',', index= False)
 
 
 main()
