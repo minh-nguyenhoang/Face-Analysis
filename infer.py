@@ -90,7 +90,7 @@ def main(args= None):
     model = BioNet(backbone, 1024, 512)
     model.to(device)
     net: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,224,224))
-    # net.load_state_dict(...)
+    net.load_state_dict(torch.load('/kaggle/input/baseline-checkpoint/best_model.pth', map_location= 'cpu'))
     net = net.to(face_detector.device)
     net.eval()
 
