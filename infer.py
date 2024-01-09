@@ -21,6 +21,7 @@ from typing import Dict, Any
 from src.utils import RetinaFace
 from src.utils.data_process.letterbox import letterbox
 from src.utils.label_mapping import LabelMapping
+import timm
 
 
 class TestDataset(Dataset):
@@ -68,7 +69,8 @@ class TestDataset(Dataset):
         return torch.tensor(image), torch.tensor(tl), torch.tensor(scale)
             
 
-
+def collate_fn(batch):
+    pass
 
 
 def main(args):
@@ -80,9 +82,13 @@ def main(args):
 
     face_detector = RetinaFace(network= 'mobilenet', device= device, gpu_id= None)
 
-    backbone: torch.nn.Module = ...
+    backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True)
+    backbone.head = nn.Identity()
+
+    model = BioNet(backbone, 1024, 512)
+    model.to(device)
     net: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,224,224))
-    net.load_state_dict(...)
+    # net.load_state_dict(...)
     net = net.to(face_detector.device)
     net.eval()
 
@@ -112,7 +118,8 @@ def main(args):
         images = torch.tensor(
             [letterbox(image[corner[0]:corner[2], corner[1]: corner[3]].cpu().numpy()) for image, corner in zip(images, corners)]
             ).to(device)
-        images = images.permute(0,3,1,2)
+        images = images.permute(0,3,1,2).div(255).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1))
+
 
         with torch.no_grad():
             age, race, gender, mask, emotion, skintone = net(images)
