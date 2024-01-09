@@ -42,7 +42,7 @@ class TestDataset(Dataset):
         file_names, position = zip(*file.items())
 
         self.root = root
-        self.file_names = file_names[(np.array(position)-1).tolist]
+        self.file_names = file_names
         self.position = position
         
 
