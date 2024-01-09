@@ -37,5 +37,5 @@ class LabelMapping:
         if attr is not None:
             return attr
         else:
-            setattr(self, __name, {v:k for k,v in zip(getattr(self, __name.rstrip("_rev")).items())})
-            return self.__getattribute__(__name)
+            setattr(self, __name, {v:k for k,v in getattr(self, __name.rstrip("_rev")).items()})
+            return self.__getattribute__(self, __name)
