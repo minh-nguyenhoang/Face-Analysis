@@ -73,6 +73,7 @@ def collate_fn(batch):
     pass
 
 
+@torch.no_grad()
 def main(args):
     '''
     Assume that the loader has batch size of 1 due to each uncrop image has different size
@@ -92,7 +93,8 @@ def main(args):
     net = net.to(face_detector.device)
     net.eval()
 
-    test_dataloader: DataLoader = ...
+    test_dataset = TestDataset(root= '/kaggle/input/pixte-public-test/public_test/public_test', json_file= '/kaggle/input/pixte-public-test/public_test_and_submission_guidelin/public_test_and_submission_guidelines/file_name_to_image_id.json')
+    test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 6)
 
     bboxes, ages, races, genders, masks, emotions, skintones = [], [], [], [], [], [], []
 
@@ -121,29 +123,29 @@ def main(args):
         images = images.permute(0,3,1,2).div(255).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1))
 
 
-        with torch.no_grad():
-            age, race, gender, mask, emotion, skintone = net(images)
 
-            age = torch.sum(age > 0.5, dim =1)
-            race = torch.argmax(race, dim = 1)
-            gender = torch.argmax(gender, dim = 1)
-            mask = torch.argmax(mask, dim = 1)
-            emotion = torch.argmax(emotion, dim = 1)
-            skintone = torch.argmax(skintone, dim = 1)
+        age, race, gender, mask, emotion, skintone = net(images)
 
-            age_pred = LabelMapping.age_map_rev[age]
-            race_pred = LabelMapping.race_map_rev[race]
-            gender_pred = LabelMapping.gender_map_rev[gender]
-            mask_pred = LabelMapping.masked_map_rev[mask]
-            emotion_pred = LabelMapping.emotion_map_rev[emotion]
-            skintone_pred = LabelMapping.skintone_map_rev[skintone]
+        age = torch.sum(age > 0.5, dim =1)
+        race = torch.argmax(race, dim = 1)
+        gender = torch.argmax(gender, dim = 1)
+        mask = torch.argmax(mask, dim = 1)
+        emotion = torch.argmax(emotion, dim = 1)
+        skintone = torch.argmax(skintone, dim = 1)
 
-            ages.extend(age_pred.tolist())
-            races.extend(race_pred.tolist())
-            genders.extend(gender_pred.tolist())
-            masks.extend(mask_pred.tolist())
-            emotions.extend(emotion_pred.tolist())
-            skintones.extend(skintone_pred.tolist())
+        age_pred = LabelMapping.age_map_rev[age]
+        race_pred = LabelMapping.race_map_rev[race]
+        gender_pred = LabelMapping.gender_map_rev[gender]
+        mask_pred = LabelMapping.masked_map_rev[mask]
+        emotion_pred = LabelMapping.emotion_map_rev[emotion]
+        skintone_pred = LabelMapping.skintone_map_rev[skintone]
+
+        ages.extend(age_pred.tolist())
+        races.extend(race_pred.tolist())
+        genders.extend(gender_pred.tolist())
+        masks.extend(mask_pred.tolist())
+        emotions.extend(emotion_pred.tolist())
+        skintones.extend(skintone_pred.tolist())
 
     
     submission_file = pd.DataFrame()
