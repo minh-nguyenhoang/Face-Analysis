@@ -22,6 +22,7 @@ from src.utils import RetinaFace
 from src.utils.data_process.letterbox import letterbox
 from src.utils.label_mapping import LabelMapping
 import timm
+from tqdm.auto import tqdm
 
 
 class TestDataset(Dataset):
@@ -98,7 +99,7 @@ def main(args= None):
 
     bboxes, ages, races, genders, masks, emotions, skintones = [], [], [], [], [], [], []
 
-    for idx, batch in enumerate(test_dataloader):
+    for idx, batch in enumerate(tqdm(test_dataloader)):
         '''
         tl should have size [Bx2]
         scale should have size [B]
@@ -118,7 +119,7 @@ def main(args= None):
         corners = [det[0][0] for det in dets]
 
 
-        bboxes.extend(torch.tensor(corners).sub(tl).div(scale).int().tolist())
+        bboxes.extend(torch.tensor(np.array(corners)).sub(tl).div(scale).int().tolist())
 
         images = torch.tensor(
             [letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy()) for image, corner in zip(images, corners)]
@@ -136,19 +137,19 @@ def main(args= None):
         emotion = torch.argmax(emotion, dim = 1)
         skintone = torch.argmax(skintone, dim = 1)
 
-        age_pred = map(LabelMapping.get('age_map_rev'), age.tolist())
-        race_pred = map(LabelMapping.get('race_map_rev'),race.tolist())
-        gender_pred = map(LabelMapping.get('gender_map_rev'),gender.tolist())
-        mask_pred = map(LabelMapping.get('masked_map_rev'),mask.tolist())
-        emotion_pred = map(LabelMapping.get('emotion_map_rev'),emotion.tolist())
-        skintone_pred = map(LabelMapping.get('skintone_map_rev'),skintone.tolist())
+        age_pred = list(map(LabelMapping.get('age_map_rev'), age.tolist()))
+        race_pred = list(map(LabelMapping.get('race_map_rev'),race.tolist()))
+        gender_pred = list(map(LabelMapping.get('gender_map_rev'),gender.tolist()))
+        mask_pred = list(map(LabelMapping.get('masked_map_rev'),mask.tolist()))
+        emotion_pred = list(map(LabelMapping.get('emotion_map_rev'),emotion.tolist()))
+        skintone_pred = list(map(LabelMapping.get('skintone_map_rev'),skintone.tolist()))
 
-        ages.extend(age_pred.tolist())
-        races.extend(race_pred.tolist())
-        genders.extend(gender_pred.tolist())
-        masks.extend(mask_pred.tolist())
-        emotions.extend(emotion_pred.tolist())
-        skintones.extend(skintone_pred.tolist())
+        ages.extend(age_pred)
+        races.extend(race_pred)
+        genders.extend(gender_pred)
+        masks.extend(mask_pred)
+        emotions.extend(emotion_pred)
+        skintones.extend(skintone_pred)
 
     
     submission_file = pd.DataFrame()
