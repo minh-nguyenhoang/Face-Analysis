@@ -127,7 +127,7 @@ def main(args= None):
 
         xyxy = torch.tensor(np.array(corners)).sub(tl).div(scale).int() #[Bx4]
 
-        tl_x, tl_y, br_x, br_y = zip(xyxy)
+        tl_x, tl_y, br_x, br_y = zip(*xyxy)
         xywh = torch.stack([tl_x, tl_y, br_x - tl_x, br_y - tl_y], dim = -1)
 
         bboxes.extend(xywh.tolist())
