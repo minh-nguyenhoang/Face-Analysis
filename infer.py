@@ -74,7 +74,7 @@ def collate_fn(batch):
 
 
 @torch.no_grad()
-def main(args):
+def main(args= None):
     '''
     Assume that the loader has batch size of 1 due to each uncrop image has different size
     '''
