@@ -2,12 +2,23 @@ import torch
 import torch.nn as nn
 from .focal_loss import FocalLoss
 
+class Bin_FocalLoss(nn.Module):
+    def __init__(self, alpha=0.25, gamma=2): 
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+    def forward(self, inputs, targets): 
+        BCE_loss = nn.BCEWithLogitsLoss(inputs, targets, reduction='none')
+        pt = torch.exp(-BCE_loss)
+        F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
+        return torch.mean(F_loss)
+    
 class multi_task_loss(nn.Module):
     def __init__(self):
         super().__init__()
-        self.age_loss = nn.BCEWithLogitsLoss()
-        self.gender_loss = nn.BCEWithLogitsLoss()
-        self.masked_loss = nn.BCEWithLogitsLoss()
+        self.age_loss = Bin_FocalLoss()
+        self.gender_loss = Bin_FocalLoss()
+        self.masked_loss = Bin_FocalLoss()
         self.race_loss = FocalLoss()
         self.skin_loss = FocalLoss()
         self.emo_loss = FocalLoss()

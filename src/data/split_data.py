@@ -1,17 +1,16 @@
 import pandas as pd
 import numpy as np
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 
 df = pd.read_csv('src/data/label_cropped.csv', index_col=0)
-print(df.head())
-df['split'] = np.random.randn(df.shape[0], 1)
 
-msk = np.random.rand(len(df)) <= 0.7
+df.loc[:, 'fold'] = -1 # Create a new column `fold` containing `-1`s.
+df = df.sample(frac=1).reset_index(drop=True) # Shuffle the rows.
+targets = df.drop('file_name', axis=1).values # Extract the targets as an array.
 
-train = df[msk].reset_index()
-test = df[~msk].reset_index()
+mskf = MultilabelStratifiedKFold(n_splits=5)
 
-train = train.drop(columns=['index'])
-test = test.drop(columns=['index'])
-print(train.head())
-train.to_csv('train.csv',index=False)
-test.to_csv('test.csv',index=False)
+for fold_, (train_, valid_) in enumerate(mskf.split(X=df, y=targets)):
+    df.loc[valid_, 'fold'] = fold_
+    
+df.to_csv('./targets_with_folds.csv', index=False)
