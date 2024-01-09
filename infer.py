@@ -169,6 +169,9 @@ def main(args= None):
     submission_file['skintone'] = pd.Series(skintones)
     submission_file['masked'] = pd.Series(masks)
 
+    submission_file.set_index('file_name')
+    submission_file['age'].fillna('20-30s')
+
     submission_file.to_csv('answer.csv', sep= ',')
 
 
