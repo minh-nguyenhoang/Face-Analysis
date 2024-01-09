@@ -3,7 +3,7 @@ from typing import Any
 
 
 class LabelMapping:
-    age_map = {'Kid': 0, 'Teenager': 1,'Senior': 3,'20-30s': 2,'40-50s': 4}
+    age_map = {'Baby':0, 'Kid': 1, 'Teenager': 2,'Senior': 4,'20-30s': 3,'40-50s': 5}
     race_map = {
         'Mongoloid': 0,
         'Caucasian': 1,
@@ -25,7 +25,8 @@ class LabelMapping:
         'Sadness':2,
         'Anger':3,
         'Surprise':4,
-        'Fear': 5
+        'Fear': 5,
+        'Disgust': 6
     }
     gender_map = {
         'Male':0,
