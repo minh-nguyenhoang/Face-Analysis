@@ -7,8 +7,9 @@ class Bin_FocalLoss(nn.Module):
         super(Bin_FocalLoss, self).__init__()
         self.alpha = alpha
         self.gamma = gamma
+        self.binary_ce = nn.BCEWithLogitsLoss(reduction='none')
     def forward(self, inputs, targets): 
-        BCE_loss = nn.BCEWithLogitsLoss(inputs, targets, reduction='none')
+        BCE_loss = self.binary_ce(inputs, targets)
         pt = torch.exp(-BCE_loss)
         F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
         return torch.mean(F_loss)
