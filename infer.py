@@ -120,10 +120,10 @@ def main(args= None):
 
         for idx, det in enumerate(dets):
             if len(det) >0:
-                corners.append(det[0][0])
+                coord = det[0][0]
+                corners.append([min(max(0, coord[0]), 1024), min(max(0, coord[1]), 1024), min(max(0, coord[2]), 1024), min(max(0, coord[3]), 1024)])
             else:
                 corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
-            print(corners)
 
         bboxes.extend(torch.tensor(np.array(corners)).sub(tl).div(scale).int().tolist())
 
