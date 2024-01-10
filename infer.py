@@ -185,6 +185,7 @@ def main():
     submission_file['image_id'] = pd.Series(test_dataloader.dataset.position, dtype= str)
     submission_file['race'] = pd.Series(races)
     submission_file['age'] = pd.Series(ages)
+    submission_file['age'].fillna(LabelMapping.get('age_map_rev').get(3))
     submission_file['emotion'] = pd.Series(emotions)
     submission_file['gender'] = pd.Series(genders)
     submission_file['skintone'] = pd.Series(skintones)
