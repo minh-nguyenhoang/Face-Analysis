@@ -116,6 +116,3 @@ if __name__ == "__main__":
   
   trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='', device=device)
     
-  
-  
->>>>>>> 3f64364 (add train and main and dataset)
