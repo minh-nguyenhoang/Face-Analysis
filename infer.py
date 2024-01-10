@@ -94,6 +94,7 @@ def main():
     args = parser.parse_args()
 
     device = 'cuda'
+    bbox_expand_scale = 0.1 
 
     face_detector = RetinaFace(network= 'resnet50', device= device, gpu_id= None)
 
@@ -130,8 +131,11 @@ def main():
         '''
         dets = face_detector(images) # [Bx4]
         corners = []
-        corners = [[min(max(tl[idx][0], det[0][0][0]), 1024- tl[idx][0]), min(max(tl[idx][1], det[0][0][1]), 1024- tl[idx][1]), 
-                                min(max(tl[idx][0], det[0][0][2]), 1024- tl[idx][0]), min(max(tl[idx][1], det[0][0][3]), 1024- tl[idx][1])] if len(det) >0 else [tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]] for idx, det in enumerate(dets)]
+        corners = [[min(max(tl[idx][0], det[0][0][0] - (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 1024- tl[idx][0] + (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 
+                    min(max(tl[idx][1], det[0][0][1] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 
+                    min(max(tl[idx][0], det[0][0][2] - (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 1024- tl[idx][0] + (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 
+                    min(max(tl[idx][1], det[0][0][3] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2)] 
+                if len(det) >0 else [tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]] for idx, det in enumerate(dets)]
         # for idx, det in enumerate(dets):
         #     if len(det) >0:
         #         coord = det[0][0]
@@ -144,6 +148,8 @@ def main():
 
         tl_x, tl_y, br_x, br_y = zip(*xyxy)
         xywh = torch.stack([torch.tensor(tl_x), torch.tensor(tl_y), torch.tensor(br_x) - torch.tensor(tl_x), torch.tensor(br_y) - torch.tensor(tl_y)], dim = -1)
+
+
 
         bboxes.extend(xywh.tolist())
 
