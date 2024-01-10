@@ -84,7 +84,7 @@ if __name__ == "__main__":
   parser.add_argument('--epochs', type=int, default=50, help='number of epoch(s) to train')
   parser.add_argument('--lr', type=float, default=1e-3, help='learning rate to train')
   parser.add_argument('--ckpt', type=str, default= 'checkpoint_062.pth', help='pretrain self-supervised checkpoint file name')
-  parser.add_argument('--finetune', type= 'store_true', default= True, help='Finetune the head or retraining whole backbone')
+  parser.add_argument('--finetune', type= bool, default= True, help='Finetune the head or retraining whole backbone')
 
   args = parser.parse_args()
   
