@@ -4,7 +4,11 @@
 *.png
 *.ipynb
 *.pyc
-
+answer.csv
 *__pycache__
 *Pytorch_Retinaface
+<<<<<<< HEAD
 *.csv
+=======
+public_test
+>>>>>>> 43cf437 (Fix bug in infer: Attemp 5: 'float' object has no attribute 'lower'?)

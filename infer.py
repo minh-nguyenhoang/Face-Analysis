@@ -130,14 +130,15 @@ def main():
         '''
         dets = face_detector(images) # [Bx4]
         corners = []
-
-        for idx, det in enumerate(dets):
-            if len(det) >0:
-                coord = det[0][0]
-                corners.append([min(max(tl[idx][0], coord[0]), 1024- tl[idx][0]), min(max(tl[idx][1], coord[1]), 1024- tl[idx][1]), 
-                                min(max(tl[idx][0], coord[2]), 1024- tl[idx][0]), min(max(tl[idx][1], coord[3]), 1024- tl[idx][1])])
-            else:
-                corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
+        corners = [[min(max(tl[idx][0], det[0][0][0]), 1024- tl[idx][0]), min(max(tl[idx][1], det[0][0][1]), 1024- tl[idx][1]), 
+                                min(max(tl[idx][0], det[0][0][2]), 1024- tl[idx][0]), min(max(tl[idx][1], det[0][0][3]), 1024- tl[idx][1])] if len(det) >0 else [tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]] for idx, det in enumerate(dets)]
+        # for idx, det in enumerate(dets):
+        #     if len(det) >0:
+        #         coord = det[0][0]
+        #         corners.append([min(max(tl[idx][0], coord[0]), 1024- tl[idx][0]), min(max(tl[idx][1], coord[1]), 1024- tl[idx][1]), 
+        #                         min(max(tl[idx][0], coord[2]), 1024- tl[idx][0]), min(max(tl[idx][1], coord[3]), 1024- tl[idx][1])])
+        #     else:
+        #         corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
 
         xyxy = torch.tensor(np.array(corners)).sub(tl).div(scale).int() #[Bx4]
 
@@ -157,8 +158,8 @@ def main():
         age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         race = torch.argmax(race, dim = 1)
 
-        gender = torch.squeeze(torch.sigmoid(gender)  > 0.5, dim = -1)
-        mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = -1)
+        gender = torch.squeeze(torch.sigmoid(gender)  > 0.5, dim = 1)
+        mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = 1)
 
         emotion = torch.argmax(emotion, dim = 1)
         skintone = torch.argmax(skintone, dim = 1)
@@ -179,9 +180,9 @@ def main():
 
     
     submission_file = pd.DataFrame()
-    submission_file['file_name'] = pd.Series(test_dataloader.dataset.file_names)
+    submission_file['file_name'] = pd.Series(test_dataloader.dataset.file_names, dtype= str)
     submission_file['bbox'] = pd.Series(bboxes)
-    submission_file['image_id'] = pd.Series(test_dataloader.dataset.position)
+    submission_file['image_id'] = pd.Series(test_dataloader.dataset.position, dtype= str)
     submission_file['race'] = pd.Series(races)
     submission_file['age'] = pd.Series(ages)
     submission_file['emotion'] = pd.Series(emotions)
