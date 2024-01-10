@@ -23,7 +23,14 @@ from src.utils.data_process.letterbox import letterbox
 from src.utils.label_mapping import LabelMapping
 import timm
 from tqdm.auto import tqdm
+from argparse import ArgumentParser
 
+parser = ArgumentParser(
+                    prog='Pixta AI Hackathon - Face Analysis',
+                    description='Inference file',
+                    epilog='Text at the bottom of help')
+
+parser.add_argument('-f' ,'--fname', default= 'best_model.pth')
 
 class TestDataset(Dataset):
     def __init__(self, 
@@ -79,22 +86,24 @@ def collate_fn(batch):
 
 
 @torch.no_grad()
-def main(args= None):
+def main():
     '''
     Assume that the loader has batch size of 1 due to each uncrop image has different size
     '''
+
+    args = parser.parse_args()
 
     device = 'cuda'
 
     face_detector = RetinaFace(network= 'resnet50', device= device, gpu_id= None)
 
-    backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True)
+    backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=False)
     backbone.head = nn.Identity()
 
     model = BioNet(backbone, 1024, 512)
     model.to(device)
     net: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,224,224))
-    net.load_state_dict(torch.load('/kaggle/input/baseline-checkpoint/best_model.pth', map_location= 'cpu'))
+    net.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
     net = net.to(face_detector.device)
     net.eval()
 
@@ -145,19 +154,21 @@ def main(args= None):
 
         age, race, gender, mask, emotion, skintone = net(images)
 
-        age = torch.sum(age > 0.5, dim =1)
+        age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         race = torch.argmax(race, dim = 1)
-        gender = torch.argmax(gender, dim = 1)
-        mask = torch.argmax(mask, dim = 1)
+
+        gender = torch.squeeze(torch.sigmoid(gender)  > 0.5, dim = -1)
+        mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = -1)
+
         emotion = torch.argmax(emotion, dim = 1)
         skintone = torch.argmax(skintone, dim = 1)
 
-        age_pred = [LabelMapping.get('age_map_rev').get(a, None) for a in age.tolist()]
-        race_pred = [LabelMapping.get('race_map_rev').get(a, None) for a in race.tolist()]
-        gender_pred = [LabelMapping.get('gender_map_rev').get(a, None) for a in gender.tolist()]
-        mask_pred = [LabelMapping.get('masked_map_rev').get(a, None) for a in mask.tolist()]
-        emotion_pred = [LabelMapping.get('emotion_map_rev').get(a, None) for a in emotion.tolist()]
-        skintone_pred = [LabelMapping.get('skintone_map_rev').get(a, None) for a in skintone.tolist()]
+        age_pred = [LabelMapping.get('age_map_rev').get(a, None) for a in age.cpu().tolist()]
+        race_pred = [LabelMapping.get('race_map_rev').get(a, None) for a in race.cpu().tolist()]
+        gender_pred = [LabelMapping.get('gender_map_rev').get(a, None) for a in gender.cpu().tolist()]
+        mask_pred = [LabelMapping.get('masked_map_rev').get(a, None) for a in mask.cpu().tolist()]
+        emotion_pred = [LabelMapping.get('emotion_map_rev').get(a, None) for a in emotion.cpu().tolist()]
+        skintone_pred = [LabelMapping.get('skintone_map_rev').get(a, None) for a in skintone.cpu().tolist()]
 
         ages.extend(age_pred)
         races.extend(race_pred)
