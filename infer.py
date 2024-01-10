@@ -183,8 +183,10 @@ def main(args= None):
 
     submission_file.to_csv('answer.csv', sep= ',', index= False)
 
-if __name__ == 'main':
-    main()
+main()
+
+# if __name__ == 'main':
+#     main()
 
 
 
