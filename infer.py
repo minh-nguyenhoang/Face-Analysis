@@ -55,6 +55,7 @@ class TestDataset(Dataset):
     def get_image(self, path):
         image = cv2.imread(path, cv2.IMREAD_COLOR)
         assert image is not None
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         scaled_padded_image, tl, scale = letterbox(image, self.temp_size, return_extra_args= True)
 
@@ -71,7 +72,10 @@ class TestDataset(Dataset):
             
 
 def collate_fn(batch):
-    pass
+    '''
+    return pseudo batch with uneven
+    '''
+    return zip(*batch)
 
 
 @torch.no_grad()
@@ -107,7 +111,7 @@ def main(args= None):
         images, tl, scale = batch
         images = images.to(device) 
 
-        tl = tl.view(-1,2)
+        tl = tl.view(-1,2) #[w,h]
         tl = torch.cat([tl,tl], dim = 1)
         scale = scale.view(-1, 1)
 
@@ -121,7 +125,8 @@ def main(args= None):
         for idx, det in enumerate(dets):
             if len(det) >0:
                 coord = det[0][0]
-                corners.append([min(max(0, coord[0]), 1024), min(max(0, coord[1]), 1024), min(max(0, coord[2]), 1024), min(max(0, coord[3]), 1024)])
+                corners.append([min(max(tl[idx][0], coord[0]), 1024- tl[idx][0]), min(max(tl[idx][1], coord[1]), 1024- tl[idx][1]), 
+                                min(max(tl[idx][0], coord[2]), 1024- tl[idx][0]), min(max(tl[idx][1], coord[3]), 1024- tl[idx][1])])
             else:
                 corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
 
@@ -136,7 +141,6 @@ def main(args= None):
             np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy()) for image, corner in zip(images, corners)])
             ).to(device)
         images = images.permute(0,3,1,2).div(255).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
-
 
 
         age, race, gender, mask, emotion, skintone = net(images)
@@ -179,11 +183,8 @@ def main(args= None):
 
     submission_file.to_csv('answer.csv', sep= ',', index= False)
 
-
-main()
-
-# if __name__ == 'main':
-#     main()
+if __name__ == 'main':
+    main()
 
 
 

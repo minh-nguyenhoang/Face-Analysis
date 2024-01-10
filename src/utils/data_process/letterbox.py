@@ -30,5 +30,5 @@ def letterbox(img: np.ndarray, size: Tuple[int] = (224,224), fill_value: int = 1
         pad = pad[...,0]
 
     if return_extra_args:
-        return pad, (offset_h, offset_w), scale
+        return pad, (offset_w, offset_h), scale
     return pad
