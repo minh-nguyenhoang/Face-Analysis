@@ -83,6 +83,7 @@ if __name__ == "__main__":
   parser.add_argument('--device', type=str, choices=['cuda', 'cpu'], default='cpu')
   parser.add_argument('--epochs', type=int, default=50, help='number of epoch(s) to train')
   parser.add_argument('--lr', type=float, default=1e-3, help='learning rate to train')
+  parser.add_argument('--ckpt', type=str, default= 'checkpoint_062.pth', help='pretrain self-supervised checkpoint file name')
 
   args = parser.parse_args()
   
@@ -99,10 +100,10 @@ if __name__ == "__main__":
   test_dl = DataLoader(test_dataset, batch_size, num_workers=4)
   
   backbone = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=True)
-  checkpoint = torch.load('/kaggle/input/baseline-checkpoint/checkpoint_062.pth')
-  # print(checkpoint['teacher'].keys())
+  checkpoint = torch.load(f'/kaggle/input/baseline-checkpoint/{args.ckpt})
+#   print(checkpoint['teacher'].keys())
   new_checkpoint = checkpoint_dino_filter(checkpoint['teacher'],backbone)
-  # print(new_checkpoint.keys())
+#   print(new_checkpoint.keys())
   backbone.load_state_dict(new_checkpoint, strict=False)
 #   print(backbone)
   backbone.head = nn.Identity()

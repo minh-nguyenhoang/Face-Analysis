@@ -1,6 +1,7 @@
 import numpy as np
 from typing import Tuple, Iterable
 import cv2
+import torch
 
 def letterbox(img: np.ndarray, size: Tuple[int] = (224,224), fill_value: int = 128, return_extra_args = False):
     assert img.ndim == 2 or img.ndim == 3
