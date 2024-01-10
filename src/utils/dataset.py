@@ -72,10 +72,10 @@ class PixtaDataset(Dataset):
         # print(type(self.age_map))
     
     def __transform__(self, x):
-        x = cv2.resize(x, (224,224))
+        x = letterbox(x, (224,224))
         x = np.transpose(x, (2,1,0))
         x = torch.from_numpy(x).float()
-        
+
         x = x / 255.0
         x = self.transform(x)
         
