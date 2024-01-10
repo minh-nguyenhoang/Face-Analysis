@@ -32,13 +32,16 @@ class PixtaDataset(Dataset):
                 raise e
             
         
-        self.transform = transforms.Compose([
+        self.train_transform = transforms.Compose([
             # transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.2, 0.2)],p = 0.5),
                                             transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
                                         #    transforms.ToTensor(),
                                             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
                                             ])
-        # self.transform = transform
+        self.test_transform = transforms.Compose([
+                                        #    transforms.ToTensor(),
+                                            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+                                            ])
         
         self.age_map = {'Baby':0, 'Kid': 1, 'Teenager': 2,'Senior': 4,'20-30s': 3,'40-50s': 5}
         self.race_map = {
@@ -76,7 +79,10 @@ class PixtaDataset(Dataset):
         x = np.transpose(x, (2,1,0))
         x = torch.from_numpy(x).float()
         x = x / 255.0
-        x = self.transform(x)
+        if self.phase == 'train':
+            x = self.train_transform(x)
+        else:
+            x = self.test_transform(x)
 
         return x
     
