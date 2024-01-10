@@ -17,7 +17,7 @@ class Bin_FocalLoss(nn.Module):
 class multi_task_loss(nn.Module):
     def __init__(self):
         super().__init__()
-        self.age_loss = Bin_FocalLoss()
+        self.age_loss = FocalLoss()
         self.gender_loss = Bin_FocalLoss()
         self.masked_loss = Bin_FocalLoss()
         self.race_loss = FocalLoss()

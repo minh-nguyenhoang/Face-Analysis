@@ -34,7 +34,7 @@ class PixtaDataset(Dataset):
         
         self.transform = transforms.Compose([
             # transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.2, 0.2)],p = 0.5),
-                                            # transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
+                                            transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
                                         #    transforms.ToTensor(),
                                             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
                                             ])
@@ -91,7 +91,8 @@ class PixtaDataset(Dataset):
         img = cv2.imread(img_path)
         
         img = self.__transform__(img)
-        age = torch.tensor([1]*(self.age_map[self.metadata.iloc[index]['age']]) + [0]*(len(self.age_map.values()) - self.age_map[self.metadata.iloc[index]['age']])).float()
+        # age = torch.tensor([1]*(self.age_map[self.metadata.iloc[index]['age']]) + [0]*(len(self.age_map.values()) - self.age_map[self.metadata.iloc[index]['age']])).float()
+        age = self.age_map[self.metadata.iloc[index]['age']]
         gender = self.gender_map[self.metadata.iloc[index]['gender']]
         masked = self.masked_map[self.metadata.iloc[index]['masked']]
         emotion = self.emotion_map[self.metadata.iloc[index]['emotion']]
