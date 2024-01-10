@@ -84,6 +84,7 @@ if __name__ == "__main__":
   parser.add_argument('--epochs', type=int, default=50, help='number of epoch(s) to train')
   parser.add_argument('--lr', type=float, default=1e-3, help='learning rate to train')
   parser.add_argument('--ckpt', type=str, default= 'checkpoint_062.pth', help='pretrain self-supervised checkpoint file name')
+  parser.add_argument('--finetune', type= 'store_true', default= True, help='Finetune the head or retraining whole backbone')
 
   args = parser.parse_args()
   
@@ -109,7 +110,7 @@ if __name__ == "__main__":
   backbone.head = nn.Identity()
   loss_func = multi_task_loss()
 
-  model = BioNet(backbone, 1024, 512, fine_tune=True)
+  model = BioNet(backbone, 1024, 512, fine_tune=args.finetune)
   model.to(device)
 #   for x, _, _, _, _, _, _ in train_dl:
 #     x = x.cuda()
