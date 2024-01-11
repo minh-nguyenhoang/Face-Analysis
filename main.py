@@ -117,7 +117,10 @@ if __name__ == "__main__":
   model = BioNet(backbone, 1024, 512, fine_tune=args.finetune)
   model.to(device)
   if args.path != "None":
-    model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.path}'))
+    try:
+        model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.path}'))
+    except:
+        model.load_state_dict(torch.load(f'{args.path}'))
 #   for x, _, _, _, _, _, _ in train_dl:
 #     x = x.cuda()
 #     print(model(x))
