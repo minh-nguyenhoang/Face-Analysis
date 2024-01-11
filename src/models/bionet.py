@@ -13,8 +13,9 @@ class BioNet(nn.Module):
         super().__init__()
         
         if fine_tune:
-            for param in backbone.parameters():
-                param.requires_grad = False
+            for name, param in backbone.named_parameters():
+                if "channel_expansion" not in name:
+                    param.requires_grad = False
         self.vcn = backbone
         self.in_channels = in_channels
 
