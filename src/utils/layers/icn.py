@@ -23,6 +23,7 @@ class CFCComponent(nn.Module):
         if not is_identity:
             self.layers = nn.Sequential(
                                     CBAM(in_channels),
+                                    nn.Conv2d(in_channels, in_channels, kernel_size= 7, groups = in_channels, bias= False),
                                     nn.AdaptiveAvgPool2d((1,1)),
                                     nn.Flatten(),
                                     nn.Linear(in_channels, out_channels)
@@ -30,6 +31,7 @@ class CFCComponent(nn.Module):
         else:
             self.layers = nn.Sequential(
                                     DRAN(in_channels),
+                                    nn.Conv2d(in_channels, in_channels, kernel_size= 7, groups = in_channels, bias= False),
                                     nn.AdaptiveAvgPool2d((1,1)),
                                     nn.Flatten(),
                                     nn.Linear(in_channels, out_channels)

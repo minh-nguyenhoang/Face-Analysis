@@ -154,7 +154,7 @@ def main():
         bboxes.extend(xywh.tolist())
 
         images = torch.tensor(
-            np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy()) for image, corner in zip(images, corners)])
+            np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy(), (112,112)) for image, corner in zip(images, corners)])
             ).to(device)
         images = images.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
 
