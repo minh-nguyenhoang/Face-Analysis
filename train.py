@@ -61,12 +61,20 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
             xb = xb.to(device)
             out = model(xb)
             out_age, out_race, out_gender, out_masked, out_emotion, out_skin = out
-            preds['age'].append(out_age)
-            preds['gender'].append(out_gender)
-            preds['masked'].append(out_masked)
-            preds['race'].append(out_race)
-            preds['emotion'].append(out_emotion)
-            preds['skin'].append(out_skin)
+
+            age_pred = torch.argmax(out_age, dim=1)
+            gender_pred = torch.sigmoid(out_gender)  > 0.5
+            masked_pred = torch.sigmoid(out_masked)  > 0.5
+
+            emotion_pred = torch.argmax(out_emotion, dim=1)
+            race_pred = torch.argmax(out_race, dim=1)
+            skin_pred = torch.argmax(out_skin, dim=1)
+            preds['age'].append(age_pred)
+            preds['gender'].append(gender_pred)
+            preds['masked'].append(masked_pred)
+            preds['race'].append(race_pred)
+            preds['emotion'].append(emotion_pred)
+            preds['skin'].append(skin_pred)
 
             labels['age'].append(age)
             labels['gender'].append(gender)
