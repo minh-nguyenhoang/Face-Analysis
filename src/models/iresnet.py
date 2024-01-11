@@ -102,9 +102,9 @@ class IResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[2])
         self.bn2 = nn.BatchNorm2d(512 * block.expansion, eps=1e-05,)
         self.dropout = nn.Dropout(p=dropout, inplace=True)
-        self.channel_expansion = nn.Conv2d(512* block.expansion, num_features, 1)
-        self.fc = nn.Linear(512 * block.expansion * self.fc_scale, 512)
-        self.features = nn.BatchNorm1d(512, eps=1e-05)
+
+        self.fc = nn.Linear(512 * block.expansion * self.fc_scale, num_features)
+        self.features = nn.BatchNorm1d(num_features, eps=1e-05)
         nn.init.constant_(self.features.weight, 1.0)
         self.features.weight.requires_grad = False
 
@@ -156,12 +156,10 @@ class IResNet(nn.Module):
             x = self.layer3(x)
             x = self.layer4(x)
             x = self.bn2(x)
-
-            x = self.channel_expansion(x)
-            # x = torch.flatten(x, 1)
-            # x = self.dropout(x)
-        # x = self.fc(x.float() if self.fp16 else x)
-        # x = self.features(x)
+            x = torch.flatten(x, 1)
+            x = self.dropout(x)
+        x = self.fc(x.float() if self.fp16 else x)
+        x = self.features(x)
         return x
 
 
@@ -169,9 +167,16 @@ def _iresnet(arch, block, layers, pretrained, progress, **kwargs):
     model = IResNet(block, layers, **kwargs)
     if pretrained:
         if arch == 'iresnet100':
-            state_dict = torch.utils.model_zoo.load_url('https://github.com/minh-nguyenhoang/Face-Analysis/releases/download/backbone/backbone.pth',
+            state_dict: dict = torch.utils.model_zoo.load_url('https://github.com/minh-nguyenhoang/Face-Analysis/releases/download/backbone/backbone.pth',
                                                          map_location=lambda storage, loc: storage)
-            model.load_state_dict(state_dict, strict= False)
+            
+            model_state_dict = model.state_dict()
+            for k, v_old in model_state_dict.items():
+                for k_new, v_new in state_dict.items():
+                    if k == k_new and v_old.shape == v_new.shape:
+                        model_state_dict[k] = v_new
+
+            model.load_state_dict(model_state_dict, strict= False)
         else:
             raise ValueError()
     return model

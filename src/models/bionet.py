@@ -4,12 +4,13 @@ import torch.nn as nn
 
 import torch.nn.functional as F
 from ..utils.layers.icn import ICN, CFC
+from ..utils.layers.groupface import GroupFace
 from ..utils.layers import CORAL
 import timm
 
 # print(timm.list_models(pretrained=True))
 class BioNet(nn.Module):
-    def __init__(self, backbone: nn.Module, in_channels, out_channels:int = 512, n_attributes:int = 6, fine_tune=False) -> None:
+    def __init__(self, backbone: nn.Module, in_channels, out_channels:int = 512, n_groups: int = 32, n_attributes:int = 6, fine_tune=False) -> None:
         super().__init__()
         
         if fine_tune:
@@ -19,7 +20,7 @@ class BioNet(nn.Module):
         self.vcn = backbone
         self.in_channels = in_channels
 
-        self.cfc = CFC(in_channels, out_channels, n_attributes)
+        self.cfc = GroupFace(in_channels, out_channels, n_groups)
 
         # self.age_branch = CORAL(in_features=out_channels, out_features=6)
         self.age_branch = nn.Sequential(
@@ -63,16 +64,19 @@ class BioNet(nn.Module):
     def forward(self, x):
         feat = self.vcn(x)
 
-        _, attr = self.cfc(feat)
+        final, group_inter, group_prob = self.cfc(feat)
 
-        age = self.age_branch(attr['attr_0'])
-        race = self.race_branch(attr['attr_1'])
-        gender = self.gender_branch(attr['attr_2'])
-        mask = self.masked_branch(attr['attr_3'])
-        emotion = self.emotion_branch(attr['attr_4'])
-        skintone = self.skintone_branch(attr['attr_5'])
+        age = self.age_branch(final)
+        race = self.race_branch(final)
+        gender = self.gender_branch(final)
+        mask = self.masked_branch(final)
+        emotion = self.emotion_branch(final)
+        skintone = self.skintone_branch(final)
 
-        return age, race, gender, mask, emotion, skintone
+        if self.training:
+            return age, race, gender, mask, emotion, skintone, group_prob
+        else:
+            return age, race, gender, mask, emotion, skintone
     
     @classmethod
     def from_inputs(cls, backbone: nn.Module, out_channels:int = 512, n_attributes:int = 4, inputs: torch.Tensor= None, input_shape: torch.Size=None, fine_tune=False):
