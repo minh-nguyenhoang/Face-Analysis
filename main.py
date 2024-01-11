@@ -85,6 +85,7 @@ if __name__ == "__main__":
   parser.add_argument('--lr', type=float, default=1e-3, help='learning rate to train')
   parser.add_argument('--ckpt', type=str, default= 'checkpoint_062.pth', help='pretrain self-supervised checkpoint file name')
   parser.add_argument('--finetune', type= bool, default= True, help='Finetune the head or retraining whole backbone')
+  parser.add_argument('--path', type= str, default= 'best_model.pth', help='Model checkpoint (backbone + head)')
 
   args = parser.parse_args()
   
@@ -112,6 +113,7 @@ if __name__ == "__main__":
 
   model = BioNet(backbone, 1024, 512, fine_tune=args.finetune)
   model.to(device)
+  model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.path}'))
 #   for x, _, _, _, _, _, _ in train_dl:
 #     x = x.cuda()
 #     print(model(x))
