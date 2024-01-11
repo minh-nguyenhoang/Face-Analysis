@@ -110,11 +110,11 @@ if __name__ == "__main__":
 # #   print(backbone)
 #   backbone.head = nn.Identity()
 
-  backbone = iresnet100(pretrained= True, num_features = 1024,)
+  backbone = iresnet100(pretrained= True, num_features = 4096,)
 
   loss_func = multi_task_loss()
 
-  model = BioNet(backbone, 1024, 512, fine_tune=args.finetune)
+  model = BioNet(backbone, 4096, 512, fine_tune=args.finetune)
   model.to(device)
   if args.path != "None":
     try:
