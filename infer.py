@@ -109,7 +109,7 @@ def main():
         model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
     except:
         model.load_state_dict(torch.load(f'{args.fname}', map_location= 'cpu'))
-    model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
+
     model = model.to(face_detector.device)
     model.eval()
 
