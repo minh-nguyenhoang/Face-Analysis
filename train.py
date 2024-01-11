@@ -34,16 +34,80 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
 
 
 def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
+
     with torch.no_grad():
         # Pass each batch through the model
-        results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric, device=device, eval=eval)
-                   for xb, age, gender, masked, emotion, race, skin in valid_dl]
+        losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = \
+        [], [], [], [], [], [], [], [], []
+
+        preds = {
+            'age': [],
+            'gender': [],
+            'masked': [],
+            'emotion': [],
+            'race': [],
+            'skin': []
+        }
+        labels = {
+            'age': [],
+            'gender': [],
+            'masked': [],
+            'emotion': [],
+            'race': [],
+            'skin': []
+        }
+        for idx, (xb, age, gender, masked, emotion, race, skin) in enumerate(tqdm(valid_dl)):
+            age, gender, masked, emotion, race, skin = age.to(device), gender.to(device), masked.to(device), emotion.to(device), race.to(device), skin.to(device)
+            xb = xb.to(device)
+            out = model(xb)
+            out_age, out_race, out_gender, out_masked, out_emotion, out_skin = out
+            preds['age'].append(out_age)
+            preds['gender'].append(out_gender)
+            preds['masked'].append(out_masked)
+            preds['race'].append(out_race)
+            preds['emotion'].append(out_emotion)
+            preds['skin'].append(out_skin)
+
+            labels['age'].append(age)
+            labels['gender'].append(gender)
+            labels['masked'].append(masked)
+            labels['race'].append(race)
+            labels['emotion'].append(emotion)
+            labels['skin'].append(skin)
+            # print(yb)
+            # Calculate loss
+            loss_batch = loss_func(out, age, gender, masked, emotion, race, skin)
+            if metric is not None:
+                # Compute the metric
+                # print(metric)
+                metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin, eval)
+            losses.append(loss_batch)
+            nums.append(len(xb))
+            metrics.append(metric_result)
+            age_metrics.append(age_acc)
+            gender_metrics.append(gender_acc)
+            masked_metrics.append(masked_acc)
+            emotion_metrics.append(emotion_acc)
+            race_metrics.append(race_acc)
+            skin_metrics.append(skin_acc)
+
+        for k, v in preds.items():
+            preds[k] = torch.cat(v, dim=0).tolist()
+        for k, v in labels.items():
+            labels[k] = torch.cat(v, dim=0).tolist()
+
         # Separate losses, counts and metrics
-        losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = zip(*results)
+        # losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = zip(*results)
         # Total size of the data set
         total = np.sum(nums)
         # Avg, loss across batches
         avg_loss = np.sum(np.multiply(np.array(losses), np.array(nums))) / total
+
+        for k in preds.keys():
+            print(f'{k} - report\n')
+            print(classification_report(labels[k].cpu().tolist(), preds[k].cpu().tolist()))
+            print('\n\n')
+        
         if metric is not None:
             # Avg of metric across batches
             avg_metric = np.sum(np.multiply(torch.stack(metrics,dim=0).cpu().numpy(), np.array(nums))) / total
@@ -75,25 +139,6 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin, eval):
     emotion_acc = torch.mean((emotion_pred == emotion).float())
     race_acc = torch.mean((race_pred == race).float())
     skin_acc = torch.mean((skin_pred == skin).float())
-
-    if eval:
-        print('age - report\n')
-        print(classification_report(age.cpu().tolist(), age_pred.cpu().tolist()))
-        print('\n\n')
-        print('race - report\n')
-        print(classification_report(race.cpu().tolist(), race_pred.cpu().tolist()))
-        print('\n\n')
-        print('gender - report\n')
-        print(classification_report(gender.cpu().tolist(), gender_pred.cpu().tolist()))
-        print('\n\n')
-        print('masked - report\n')
-        print(classification_report(masked.cpu().tolist(), masked_pred.cpu().tolist()))
-        print('\n\n')
-        print('emotion - report\n')
-        print(classification_report(emotion.cpu().tolist(), emotion_pred.cpu().tolist()))
-        print('\n\n')
-        print('skintone - report\n')
-        print(classification_report(skin.cpu().tolist(), skin_pred.cpu().tolist()))
 
     return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc
 
