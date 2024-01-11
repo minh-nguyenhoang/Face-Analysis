@@ -25,38 +25,32 @@ class BioNet(nn.Module):
         self.age_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
             nn.ReLU(),
-            nn.LayerNorm(512),
             nn.Linear(512, 6)
         )
 
         self.race_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
             nn.ReLU(),
-            nn.LayerNorm(512),
             nn.Linear(512, 3)
         )
         self.gender_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
             nn.ReLU(),
-            nn.LayerNorm(512),
             nn.Linear(512, 1)
         )
         self.masked_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
             nn.ReLU(),
-            nn.LayerNorm(512),
             nn.Linear(512, 1)
         )
         self.emotion_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
             nn.ReLU(),
-            nn.LayerNorm(512),
             nn.Linear(512, 7)
         )
         self.skintone_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
             nn.ReLU(),
-            nn.LayerNorm(512),
             nn.Linear(512, 4)
         )
 
