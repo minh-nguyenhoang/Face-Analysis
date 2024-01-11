@@ -105,11 +105,10 @@ def main():
     backbone = iresnet100(pretrained= True, num_features = 1024,)
 
     model: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,112,112))
-    if args.path != "None":
-        try:
-            model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
-        except:
-            model.load_state_dict(torch.load(f'{args.fname}', map_location= 'cpu'))
+    try:
+        model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
+    except:
+        model.load_state_dict(torch.load(f'{args.fname}', map_location= 'cpu'))
     model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
     model = model.to(face_detector.device)
     model.eval()
