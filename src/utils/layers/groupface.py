@@ -22,7 +22,7 @@ class GroupFace(nn.Module):
     def forward(self, x: torch.Tensor):
         instacne_representation = self.instance_fc(x)
         # GDN
-        group_inter, group_prob: torch.Tensor = self.gdn(instacne_representation)
+        group_inter, group_prob = self.gdn(instacne_representation)
         # group aware repr
 
         # group ensemble
