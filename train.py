@@ -92,9 +92,9 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
             skin_metrics.append(skin_acc.cpu())
 
         for k, v in preds.items():
-            preds[k] = torch.cat(v, dim=0).tolist()
+            preds[k] = torch.cat(v, dim=0).cpu().tolist()
         for k, v in labels.items():
-            labels[k] = torch.cat(v, dim=0).tolist()
+            labels[k] = torch.cat(v, dim=0).cpu().tolist()
 
         # Separate losses, counts and metrics
         # losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = zip(*results)
@@ -105,7 +105,7 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
 
         for k in preds.keys():
             print(f'{k} - report\n')
-            print(classification_report(labels[k].cpu().tolist(), preds[k].cpu().tolist()))
+            print(classification_report(labels[k], preds[k]))
             print('\n\n')
         
         if metric is not None:
