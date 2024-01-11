@@ -33,9 +33,9 @@ class PixtaDataset(Dataset):
             
         # (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
         self.train_transform = transforms.Compose([
-            # transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.2, 0.2)],p = 0.5),
+            transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.02, 0.02)],p = 0.5),
                                             transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
-                                        #    transforms.ToTensor(),
+                                            RandomGammaCorrection(),
                                             transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)),
                                             ])
         self.test_transform = transforms.Compose([
@@ -107,3 +107,25 @@ class PixtaDataset(Dataset):
         
         return img, age, gender, masked, emotion, race, skin
     
+class RandomGammaCorrection(object):
+    '''
+    Apply Gamma Correction to the images
+    '''
+
+    def __init__(self, gamma = None):
+        self.gamma = gamma
+        
+        
+    def __call__(self,image):
+        
+        if self.gamma == None:
+            # more chances of selecting 0 (original image)
+            gammas = [0,0,0,0.5,1,1.5]
+            self.gamma = random.choice(gammas)
+        
+        # print(self.gamma)
+        if self.gamma == 0:
+            return image
+        
+        else:
+            return TF.adjust_gamma(image, self.gamma, gain=1)
