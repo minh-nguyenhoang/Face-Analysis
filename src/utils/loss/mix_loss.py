@@ -17,12 +17,12 @@ class Bin_FocalLoss(nn.Module):
 class multi_task_loss(nn.Module):
     def __init__(self):
         super().__init__()
-        self.age_loss = Bin_FocalLoss()
-        self.gender_loss = Bin_FocalLoss()
-        self.masked_loss = Bin_FocalLoss()
-        self.race_loss = FocalLoss()
-        self.skin_loss = FocalLoss()
-        self.emo_loss = FocalLoss()
+        self.age_loss = FocalLoss(gamma= 2)
+        self.gender_loss = Bin_FocalLoss(alpha= 1.)
+        self.masked_loss = Bin_FocalLoss(alpha= 1.)
+        self.race_loss = FocalLoss(gamma= 2)
+        self.skin_loss = FocalLoss(gamma= 2)
+        self.emo_loss = FocalLoss(gamma= 2)
 
     
     def forward(self, x, age, gender, masked, emotion, race, skin):

@@ -8,6 +8,8 @@ import numpy as np
 import cv2
 from sklearn.model_selection import train_test_split
 import torchvision.transforms as transforms
+import torchvision.transforms.functional as TF
+import random
 
 class PixtaDataset(Dataset):
     def __init__(self, 
@@ -31,14 +33,17 @@ class PixtaDataset(Dataset):
             except Exception as e:
                 raise e
             
-        
-        self.transform = transforms.Compose([
-            # transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.2, 0.2)],p = 0.5),
-                                            # transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
-                                        #    transforms.ToTensor(),
-                                            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
+        # (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
+        self.train_transform = transforms.Compose([
+            transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.02, 0.02)],p = 0.5),
+                                            transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
+                                            RandomGammaCorrection(),
+                                            transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)),
                                             ])
-        # self.transform = transform
+        self.test_transform = transforms.Compose([
+                                        #    transforms.ToTensor(),
+                                            transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)),
+                                            ])
         
         self.age_map = {'Baby':0, 'Kid': 1, 'Teenager': 2,'Senior': 4,'20-30s': 3,'40-50s': 5}
         self.race_map = {
@@ -72,12 +77,15 @@ class PixtaDataset(Dataset):
         # print(type(self.age_map))
     
     def __transform__(self, x):
-        x = cv2.resize(x, (224,224))
+        x = letterbox(x, (112, 112))
         x = np.transpose(x, (2,1,0))
         x = torch.from_numpy(x).float()
-       
-        x = self.transform(x)
-        # x = x / 255.0
+        x = x / 255.0
+        if self.phase == 'train':
+            x = self.train_transform(x)
+        else:
+            x = self.test_transform(x)
+
         return x
     
     def __len__(self):
@@ -91,7 +99,8 @@ class PixtaDataset(Dataset):
         img = cv2.imread(img_path)
         
         img = self.__transform__(img)
-        age = torch.tensor([1]*(self.age_map[self.metadata.iloc[index]['age']]) + [0]*(len(self.age_map.values()) - self.age_map[self.metadata.iloc[index]['age']])).float()
+        # age = torch.tensor([1]*(self.age_map[self.metadata.iloc[index]['age']]) + [0]*(len(self.age_map.values()) - self.age_map[self.metadata.iloc[index]['age']])).float()
+        age = self.age_map[self.metadata.iloc[index]['age']]
         gender = self.gender_map[self.metadata.iloc[index]['gender']]
         masked = self.masked_map[self.metadata.iloc[index]['masked']]
         emotion = self.emotion_map[self.metadata.iloc[index]['emotion']]
@@ -100,3 +109,26 @@ class PixtaDataset(Dataset):
         
         return img, age, gender, masked, emotion, race, skin
     
+
+class RandomGammaCorrection(object):
+    '''
+    Apply Gamma Correction to the images
+    '''
+
+    def __init__(self, gamma = None):
+        self.gamma = gamma
+        
+        
+    def __call__(self,image):
+        
+        if self.gamma == None:
+            # more chances of selecting 0 (original image)
+            gammas = [0,0,0,0.5,1,1.5]
+            self.gamma = random.choice(gammas)
+        
+        # print(self.gamma)
+        if self.gamma == 0:
+            return image
+        
+        else:
+            return TF.adjust_gamma(image, self.gamma, gain=1)
