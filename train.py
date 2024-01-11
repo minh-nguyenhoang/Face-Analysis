@@ -81,15 +81,15 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
                 # Compute the metric
                 # print(metric)
                 metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin, eval)
-            losses.append(loss_batch)
+            losses.append(loss_batch.cpu())
             nums.append(len(xb))
-            metrics.append(metric_result)
-            age_metrics.append(age_acc)
-            gender_metrics.append(gender_acc)
-            masked_metrics.append(masked_acc)
-            emotion_metrics.append(emotion_acc)
-            race_metrics.append(race_acc)
-            skin_metrics.append(skin_acc)
+            metrics.append(metric_result.cpu())
+            age_metrics.append(age_acc.cpu())
+            gender_metrics.append(gender_acc.cpu())
+            masked_metrics.append(masked_acc.cpu())
+            emotion_metrics.append(emotion_acc.cpu())
+            race_metrics.append(race_acc.cpu())
+            skin_metrics.append(skin_acc.cpu())
 
         for k, v in preds.items():
             preds[k] = torch.cat(v, dim=0).tolist()
