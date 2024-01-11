@@ -138,12 +138,12 @@ def cutout(mask_size= 30, p= 0.5, cutout_inside= True, mask_color=(0, 0, 0)):
     offset = 1 if mask_size % 2 == 0 else 0
 
     def _cutout(image):
-        image = np.asarray(image).copy()
+        image = torch.tensor(image)
 
         if np.random.random() > p:
             return image
 
-        h, w = image.shape[:2]
+        h, w = image.shape[-2:]
 
         if cutout_inside:
             cxmin, cxmax = mask_size_half, w + offset - mask_size_half
@@ -162,7 +162,7 @@ def cutout(mask_size= 30, p= 0.5, cutout_inside= True, mask_color=(0, 0, 0)):
         ymin = max(0, ymin)
         xmax = min(w, xmax)
         ymax = min(h, ymax)
-        image[ymin:ymax, xmin:xmax] = mask_color
+        image[...,ymin:ymax, xmin:xmax] = mask_color
         return image
 
     return _cutout
