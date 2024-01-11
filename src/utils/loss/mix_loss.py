@@ -15,14 +15,14 @@ class Bin_FocalLoss(nn.Module):
         return torch.mean(F_loss)
     
 class multi_task_loss(nn.Module):
-    def __init__(self):
+    def __init__(self, device='cuda'):
         super().__init__()
-        self.age_loss = FocalLoss(gamma= 2, alpha=torch.tensor([1.,1.,1.,0.25,1.,1.]))
+        self.age_loss = FocalLoss(gamma= 2, alpha=torch.tensor([1.,1.,1.,0.25,1.,1.]).to(device))
         self.gender_loss = Bin_FocalLoss(alpha= 1.)
         self.masked_loss = Bin_FocalLoss(alpha= 1.)
-        self.race_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.]))
-        self.skin_loss = FocalLoss(gamma= 2, alpha=torch.tensor([ 0.25, 0.5, 1., 1.]))
-        self.emo_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.,1.,1.,1.,1.]))
+        self.race_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.]).to(device))
+        self.skin_loss = FocalLoss(gamma= 2, alpha=torch.tensor([ 0.25, 0.5, 1., 1.]).to(device))
+        self.emo_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.,1.,1.,1.,1.]).to(device))
 
     
     def forward(self, x, age, gender, masked, emotion, race, skin):
