@@ -130,7 +130,10 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
 
 
 def accuracy(outputs, age, gender, masked, emotion, race, skin, eval):
-    out_age, out_race, out_gender, out_masked, out_emotion, out_skin = outputs
+    if len(outputs) == 7:
+        out_age, out_race, out_gender, out_masked, out_emotion, out_skin, _ = outputs
+    else:
+        out_age, out_race, out_gender, out_masked, out_emotion, out_skin = outputs
     # age_pred = torch.sum(out_age > 0.5, dim=1)
     age_pred = torch.argmax(out_age, dim=1)
     # age = torch.sum(age, dim=1)
