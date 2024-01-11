@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt=None, metric=None, device='cpu'):
+def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt=None, metric=None, device='cpu', eval=False):
     # Generate predictions
     age, gender, masked, emotion, race, skin = age.to(device), gender.to(device), masked.to(device), emotion.to(device), race.to(device), skin.to(device)
     xb = xb.to(device)
@@ -29,14 +29,14 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     if metric is not None:
         # Compute the metric
         # print(metric)
-        metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin)
+        metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin, eval)
     return loss.item(), len(xb), metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc
 
 
-def evaluate(model, loss_func, valid_dl, metric=None, device=None):
+def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
     with torch.no_grad():
         # Pass each batch through the model
-        results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric, device=device)
+        results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric, device=device, eval=eval)
                    for xb, age, gender, masked, emotion, race, skin in valid_dl]
         # Separate losses, counts and metrics
         losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = zip(*results)
@@ -57,7 +57,7 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None):
     return avg_loss, total, avg_metric, avg_age_metric, avg_gender_metric, avg_masked_metric, avg_emotion_metric, avg_race_metric, avg_skin_metric
 
 
-def accuracy(outputs, age, gender, masked, emotion, race, skin):
+def accuracy(outputs, age, gender, masked, emotion, race, skin, eval):
     out_age, out_race, out_gender, out_masked, out_emotion, out_skin = outputs
     # age_pred = torch.sum(out_age > 0.5, dim=1)
     age_pred = torch.argmax(out_age, dim=1)
@@ -75,6 +75,25 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin):
     emotion_acc = torch.mean((emotion_pred == emotion).float())
     race_acc = torch.mean((race_pred == race).float())
     skin_acc = torch.mean((skin_pred == skin).float())
+
+    if eval:
+        print('age - report\n')
+        print(classification_report(age.cpu().tolist(), age_pred.cpu().tolist()))
+        print('\n\n')
+        print('race - report\n')
+        print(classification_report(race.cpu().tolist(), race_pred.cpu().tolist()))
+        print('\n\n')
+        print('gender - report\n')
+        print(classification_report(gender.cpu().tolist(), gender_pred.cpu().tolist()))
+        print('\n\n')
+        print('masked - report\n')
+        print(classification_report(masked.cpu().tolist(), masked_pred.cpu().tolist()))
+        print('\n\n')
+        print('emotion - report\n')
+        print(classification_report(emotion.cpu().tolist(), emotion_pred.cpu().tolist()))
+        print('\n\n')
+        print('skintone - report\n')
+        print(classification_report(skin.cpu().tolist(), skin_pred.cpu().tolist()))
 
     return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc
 
@@ -107,7 +126,7 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
         
         
         model.eval()
-        result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device)
+        result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device, eval=True)
         val_loss, total, val_metric, age_metric, gender_metric, masked_metric, emotion_metric, race_metric, skin_metric = result
         sched.step(val_loss)
 
