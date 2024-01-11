@@ -15,7 +15,7 @@ class BioNet(nn.Module):
         
         if fine_tune:
             for name, param in backbone.named_parameters():
-                if "channel_expansion" not in name:
+                if "fc" not in name or "features" not in name:
                     param.requires_grad = False
         self.vcn = backbone
         self.in_channels = in_channels
