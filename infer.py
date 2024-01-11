@@ -19,6 +19,7 @@ import time
 import json
 from typing import Dict, Any
 from src.utils import RetinaFace
+from src.models.iresnet import iresnet100
 from src.utils.data_process.letterbox import letterbox
 from src.utils.label_mapping import LabelMapping
 import timm
@@ -98,15 +99,20 @@ def main():
 
     face_detector = RetinaFace(network= 'resnet50', device= device, gpu_id= None)
 
-    backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=False)
-    backbone.head = nn.Identity()
+    # backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=False)
+    # backbone.head = nn.Identity()
 
-    model = BioNet(backbone, 1024, 512)
-    model.to(device)
-    net: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,224,224))
-    net.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
-    net = net.to(face_detector.device)
-    net.eval()
+    backbone = iresnet100(pretrained= True, num_features = 1024,)
+
+    model: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,112,112))
+    if args.path != "None":
+        try:
+            model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
+        except:
+            model.load_state_dict(torch.load(f'{args.fname}', map_location= 'cpu'))
+    model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.fname}', map_location= 'cpu'))
+    model = model.to(face_detector.device)
+    model.eval()
 
     test_dataset = TestDataset(root= '/kaggle/input/pixte-public-test/public_test/public_test', json_file= '/kaggle/input/pixte-public-test/public_test_and_submission_guidelin/public_test_and_submission_guidelines/file_name_to_image_id.json')
     test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 16)
@@ -156,10 +162,10 @@ def main():
         images = torch.tensor(
             np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy(), (112,112)) for image, corner in zip(images, corners)])
             ).to(device)
-        images = images.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
+        images = images.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device)).div(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device))
 
 
-        age, race, gender, mask, emotion, skintone = net(images)
+        age, race, gender, mask, emotion, skintone = model(images)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         age = torch.argmax(age, dim = 1)
