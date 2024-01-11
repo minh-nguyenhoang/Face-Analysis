@@ -102,8 +102,9 @@ class IResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[2])
         self.bn2 = nn.BatchNorm2d(512 * block.expansion, eps=1e-05,)
         self.dropout = nn.Dropout(p=dropout, inplace=True)
-        self.fc = nn.Linear(512 * block.expansion * self.fc_scale, num_features)
-        self.features = nn.BatchNorm1d(num_features, eps=1e-05)
+        self.channel_expansion = nn.Conv2d(512* block.expansion, num_features, 1)
+        self.fc = nn.Linear(512 * block.expansion * self.fc_scale, 512)
+        self.features = nn.BatchNorm1d(512, eps=1e-05)
         nn.init.constant_(self.features.weight, 1.0)
         self.features.weight.requires_grad = False
 
@@ -155,6 +156,8 @@ class IResNet(nn.Module):
             x = self.layer3(x)
             x = self.layer4(x)
             x = self.bn2(x)
+
+            x = self.channel_expansion(x)
             # x = torch.flatten(x, 1)
             # x = self.dropout(x)
         # x = self.fc(x.float() if self.fp16 else x)
