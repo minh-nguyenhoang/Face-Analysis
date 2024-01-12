@@ -70,8 +70,8 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin):
     skin_pred = torch.argmax(out_skin, dim=1)
     
     age_acc = torch.mean( (age_pred == age).float())
-    gender_acc = torch.mean((gender_pred == gender).float())
-    masked_acc = torch.mean((masked_pred == masked).float())
+    gender_acc = torch.mean((gender_pred.int() == gender).float())
+    masked_acc = torch.mean((masked_pred.int() == masked).float())
     emotion_acc = torch.mean((emotion_pred == emotion).float())
     race_acc = torch.mean((race_pred == race).float())
     skin_acc = torch.mean((skin_pred == skin).float())
