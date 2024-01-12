@@ -170,8 +170,8 @@ def main():
         age = torch.argmax(age, dim = 1)
         race = torch.argmax(race, dim = 1)
 
-        gender = torch.squeeze(torch.sigmoid(gender)  > 0.5, dim = 1)
-        mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = 1)
+        gender = torch.squeeze(torch.sigmoid(gender)  > 0.5, dim = 1).int()
+        mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = 1).int()
 
         emotion = torch.argmax(emotion, dim = 1)
         skintone = torch.argmax(skintone, dim = 1)
