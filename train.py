@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt=None, metric=None, device='cpu'):
+def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt=None, metric=None, device='cpu', eval=False):
     # Generate predictions
     age, gender, masked, emotion, race, skin = age.to(device), gender.to(device), masked.to(device), emotion.to(device), race.to(device), skin.to(device)
     xb = xb.to(device)
@@ -29,21 +29,93 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     if metric is not None:
         # Compute the metric
         # print(metric)
-        metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin)
+        metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin, eval)
     return loss.item(), len(xb), metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc
 
 
-def evaluate(model, loss_func, valid_dl, metric=None, device=None):
+def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
+
     with torch.no_grad():
         # Pass each batch through the model
-        results = [loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, metric=metric, device=device)
-                   for xb, age, gender, masked, emotion, race, skin in valid_dl]
+        losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = \
+        [], [], [], [], [], [], [], [], []
+
+        preds = {
+            'age': [],
+            'gender': [],
+            'masked': [],
+            'emotion': [],
+            'race': [],
+            'skin': []
+        }
+        labels = {
+            'age': [],
+            'gender': [],
+            'masked': [],
+            'emotion': [],
+            'race': [],
+            'skin': []
+        }
+        for idx, (xb, age, gender, masked, emotion, race, skin) in enumerate(tqdm(valid_dl)):
+            age, gender, masked, emotion, race, skin = age.to(device), gender.to(device), masked.to(device), emotion.to(device), race.to(device), skin.to(device)
+            xb = xb.to(device)
+            out = model(xb)
+            out_age, out_race, out_gender, out_masked, out_emotion, out_skin = out
+
+            age_pred = torch.argmax(out_age, dim=1)
+            gender_pred = torch.sigmoid(out_gender)  > 0.5
+            masked_pred = torch.sigmoid(out_masked)  > 0.5
+
+            emotion_pred = torch.argmax(out_emotion, dim=1)
+            race_pred = torch.argmax(out_race, dim=1)
+            skin_pred = torch.argmax(out_skin, dim=1)
+            preds['age'].append(age_pred)
+            preds['gender'].append(gender_pred)
+            preds['masked'].append(masked_pred)
+            preds['race'].append(race_pred)
+            preds['emotion'].append(emotion_pred)
+            preds['skin'].append(skin_pred)
+
+            labels['age'].append(age)
+            labels['gender'].append(gender)
+            labels['masked'].append(masked)
+            labels['race'].append(race)
+            labels['emotion'].append(emotion)
+            labels['skin'].append(skin)
+            # print(yb)
+            # Calculate loss
+            loss_batch = loss_func(out, age, gender, masked, emotion, race, skin)
+            if metric is not None:
+                # Compute the metric
+                # print(metric)
+                metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin, eval)
+            losses.append(loss_batch.cpu())
+            nums.append(len(xb))
+            metrics.append(metric_result.cpu())
+            age_metrics.append(age_acc.cpu())
+            gender_metrics.append(gender_acc.cpu())
+            masked_metrics.append(masked_acc.cpu())
+            emotion_metrics.append(emotion_acc.cpu())
+            race_metrics.append(race_acc.cpu())
+            skin_metrics.append(skin_acc.cpu())
+
+        for k, v in preds.items():
+            preds[k] = torch.cat(v, dim=0).cpu().tolist()
+        for k, v in labels.items():
+            labels[k] = torch.cat(v, dim=0).cpu().tolist()
+
         # Separate losses, counts and metrics
-        losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = zip(*results)
+        # losses, nums, metrics, age_metrics, gender_metrics, masked_metrics, emotion_metrics, race_metrics, skin_metrics = zip(*results)
         # Total size of the data set
         total = np.sum(nums)
         # Avg, loss across batches
         avg_loss = np.sum(np.multiply(np.array(losses), np.array(nums))) / total
+
+        for k in preds.keys():
+            print(f'{k} - report\n')
+            print(classification_report(labels[k], preds[k]))
+            print('\n\n')
+        
         if metric is not None:
             # Avg of metric across batches
             avg_metric = np.sum(np.multiply(torch.stack(metrics,dim=0).cpu().numpy(), np.array(nums))) / total
@@ -57,8 +129,11 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None):
     return avg_loss, total, avg_metric, avg_age_metric, avg_gender_metric, avg_masked_metric, avg_emotion_metric, avg_race_metric, avg_skin_metric
 
 
-def accuracy(outputs, age, gender, masked, emotion, race, skin):
-    out_age, out_race, out_gender, out_masked, out_emotion, out_skin = outputs
+def accuracy(outputs, age, gender, masked, emotion, race, skin, eval):
+    if len(outputs) == 7:
+        out_age, out_race, out_gender, out_masked, out_emotion, out_skin, _ = outputs
+    else:
+        out_age, out_race, out_gender, out_masked, out_emotion, out_skin = outputs
     # age_pred = torch.sum(out_age > 0.5, dim=1)
     age_pred = torch.argmax(out_age, dim=1)
     # age = torch.sum(age, dim=1)
@@ -107,7 +182,7 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
         
         
         model.eval()
-        result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device)
+        result = evaluate(model, loss_func=loss_func, valid_dl=valid_dl, metric=metric, device=device, eval=True)
         val_loss, total, val_metric, age_metric, gender_metric, masked_metric, emotion_metric, race_metric, skin_metric = result
         sched.step(val_loss)
 
