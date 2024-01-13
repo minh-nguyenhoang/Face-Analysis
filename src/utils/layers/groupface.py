@@ -49,26 +49,25 @@ class GroupFace(nn.Module):
         self.mode = mode
         self.groups = groups
         self.instance_fc = nn.ModuleList([nn.Sequential(
-                                            FC(in_channels, in_channels// 2),
-                                            nn.Linear(in_channels// 2, out_channels)
+                                            FC(in_channels, in_channels// 8),
+                                            nn.Linear(in_channels// 8, out_channels)
         ) for i in range(n_attributes)])
         self.gdn = GDN(out_channels*n_attributes, groups)
         self.group_fc = nn.ModuleList([nn.Sequential(
-                                            FC(in_channels, in_channels// 2),
-                                            nn.Linear(in_channels// 2, out_channels*2)
+                                            FC(in_channels, in_channels// 8),
+                                            nn.Linear(in_channels// 8, out_channels)
         ) for i in range(groups)])
         
         self.out_channels = out_channels
         self.n_attributes = n_attributes
 
-        self.attribute_disentangle = nn.Linear(out_channels*2, out_channels*n_attributes, bias= False)
+        self.attribute_disentangle = nn.Linear(out_channels, n_attributes, bias= False)
 
 
     def forward(self, x: torch.Tensor):
         instacne_representation = [module(x) for module in self.instance_fc] 
-        instacne_representation = torch.cat(instacne_representation,dim= -1)
         # GDN
-        group_inter, group_prob = self.gdn(instacne_representation)
+        group_inter, group_prob = self.gdn(torch.cat(instacne_representation,dim= -1))
         # group aware repr
 
         # group ensemble
@@ -79,6 +78,6 @@ class GroupFace(nn.Module):
             label = torch.argmax(group_prob, dim=1)
             group_ensembled = self.group_fc[label](x)    
         
-        final:torch.Tensor = instacne_representation + self.attribute_disentangle(group_ensembled)
-        final = final.chunk(self.n_attributes, dim = 1)
+        coeffs = self.attribute_disentangle(group_ensembled).view(self.n_attributes,-1,1)
+        final:torch.Tensor = [instacne_representation + coeff*group_ensembled for coeff in coeffs]
         return final, group_inter, group_prob
