@@ -14,15 +14,9 @@ class GroupFace(nn.Module):
         self.mode = mode
         self.groups = groups
         self.n_attributes = n_attributes
-        self.instance_fc = nn.Sequential(
-                                            FC(in_channels, in_channels// 2),
-                                            nn.Linear(in_channels// 2, out_channels)
-        )
+        self.instance_fc = FC(in_channels, out_channels),
         self.gdn = GDN(out_channels, groups)
-        self.group_fc = nn.ModuleList([nn.Sequential(
-                                            FC(in_channels, in_channels// 2),
-                                            nn.Linear(in_channels// 2, out_channels)
-        ) for i in range(groups)])
+        self.group_fc = nn.ModuleList([FC(in_channels, out_channels) for i in range(groups)])
         
         self.out_channels = out_channels
 
