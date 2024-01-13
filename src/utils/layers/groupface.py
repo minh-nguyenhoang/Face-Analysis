@@ -77,7 +77,7 @@ class GroupFace(nn.Module):
         else:
             label = torch.argmax(group_prob, dim=1)
             group_ensembled = self.group_fc[label](x)    
-        torch.split()
+
         coeffs = torch.split(self.attribute_disentangle(group_ensembled), 1, dim= 1)
         final:torch.Tensor = [instacne_representation + coeff*group_ensembled for coeff in coeffs]
         return final, group_inter, group_prob
