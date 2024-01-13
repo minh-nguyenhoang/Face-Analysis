@@ -549,7 +549,7 @@ def post_process(
 
 
 @torch.no_grad()
-def batch_detect(net, images, device, is_tensor=False, threshold=0.3, cv=False):
+def batch_detect(net, images, device, is_tensor=False, threshold=0.6, cv=False):
     confidence_threshold = threshold
     cfg = cfg_mnet
     top_k = 5000
