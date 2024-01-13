@@ -20,7 +20,7 @@ class BioNet(nn.Module):
         self.vcn = backbone
         self.in_channels = in_channels
 
-        self.cfc = GroupFace(in_channels, out_channels, n_groups)
+        self.cfc = GroupFace(in_channels, out_channels, n_groups, n_attributes= n_attributes)
 
         # self.age_branch = CORAL(in_features=out_channels, out_features=6)
         self.age_branch = nn.Sequential(
@@ -66,12 +66,12 @@ class BioNet(nn.Module):
 
         final, group_inter, group_prob = self.cfc(feat)
 
-        age = self.age_branch(final)
-        race = self.race_branch(final)
-        gender = self.gender_branch(final)
-        mask = self.masked_branch(final)
-        emotion = self.emotion_branch(final)
-        skintone = self.skintone_branch(final)
+        age = self.age_branch(final[0])
+        race = self.race_branch(final[1])
+        gender = self.gender_branch(final[2])
+        mask = self.masked_branch(final[3])
+        emotion = self.emotion_branch(final[4])
+        skintone = self.skintone_branch(final[5])
 
         if self.training:
             return age, race, gender, mask, emotion, skintone, group_prob
