@@ -13,6 +13,7 @@ class GroupFace(nn.Module):
         super(GroupFace, self).__init__()
         self.mode = mode
         self.groups = groups
+        self.n_attributes = n_attributes
         self.instance_fc = nn.Sequential(
                                             FC(in_channels, in_channels// 2),
                                             nn.Linear(in_channels// 2, out_channels)
@@ -40,7 +41,7 @@ class GroupFace(nn.Module):
             group_ensembled = self.group_fc[label](x)    
         
         final = instacne_representation + group_ensembled
-        return final, group_inter, group_prob
+        return [final]*self.n_attributes, group_inter, group_prob
     
 
 # class GroupFace(nn.Module):
