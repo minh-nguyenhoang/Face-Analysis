@@ -35,7 +35,7 @@ class GroupFace(nn.Module):
             group_ensembled = self.group_fc[label](x)    
         
         final = instacne_representation + group_ensembled
-        return [final]*self.n_attributes, group_inter, group_prob
+        return final, group_inter, group_prob
     
 
 # class GroupFace(nn.Module):

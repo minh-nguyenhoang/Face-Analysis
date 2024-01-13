@@ -10,7 +10,7 @@ import timm
 
 # print(timm.list_models(pretrained=True))
 class BioNet(nn.Module):
-    def __init__(self, backbone: nn.Module, in_channels, out_channels:int = 512, n_groups: int = 32, n_attributes:int = 6, fine_tune=False) -> None:
+    def __init__(self, backbone: nn.Module, in_channels, out_channels:int = 512, n_groups: int = 16, n_attributes:int = 6, fine_tune=False) -> None:
         super().__init__()
         
         if fine_tune:
@@ -66,12 +66,12 @@ class BioNet(nn.Module):
 
         final, group_inter, group_prob = self.cfc(feat)
 
-        age = self.age_branch(final[0])
-        race = self.race_branch(final[1])
-        gender = self.gender_branch(final[2])
-        mask = self.masked_branch(final[3])
-        emotion = self.emotion_branch(final[4])
-        skintone = self.skintone_branch(final[5])
+        age = self.age_branch(final)
+        race = self.race_branch(final)
+        gender = self.gender_branch(final)
+        mask = self.masked_branch(final)
+        emotion = self.emotion_branch(final)
+        skintone = self.skintone_branch(final)
 
         if self.training:
             return age, race, gender, mask, emotion, skintone, group_prob
