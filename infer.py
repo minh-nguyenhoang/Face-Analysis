@@ -127,7 +127,7 @@ def main():
         images = images.to(device) 
 
         tl = tl.view(-1,2) #[w,h]
-        tl = torch.cat([tl,tl], dim = 1)
+        tl = torch.cat([tl,tl], dim = 1) # [Bx4]
         scale = scale.view(-1, 1)
 
         '''
@@ -135,7 +135,7 @@ def main():
         Checked in public_test, each image only has 1 bbox. 
         '''
         dets = face_detector(images) # [Bx4]
-        corners, tl_, scale_, position_, file_path_ = [], [], [], [], []
+        images_, corners, tl_, scale_, position_, file_path_ = [], [], [], [], [], []
         
         # corners = [[min(max(tl[idx][0], det[0][0][0] - (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 1024- tl[idx][0] + (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 
         #             min(max(tl[idx][1], det[0][0][1] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 
@@ -143,25 +143,29 @@ def main():
         #             min(max(tl[idx][1], det[0][0][3] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2)] 
         #         if len(det) >0 else [tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]] for idx, det in enumerate(dets)]
         
-        for idx, det in enumerate(zip(dets, tl, scale, position)):
+        for idx, det in enumerate(dets):
             if len(det) >0:
                 for coord in det:
-                    corners.append([min(max(tl[idx][0], coord[0][0] - (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 1024 - tl[idx][0] + (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 
-                                    min(max(tl[idx][1], coord[0][1] - (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 1024 - tl[idx][1] + (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 
-                                    min(max(tl[idx][0], coord[0][2] - (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 1024 - tl[idx][0] + (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 
-                                    min(max(tl[idx][1], coord[0][3] - (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 1024 - tl[idx][1] + (coord[0][3] - coord[0][1]) * bbox_expand_scale/2)])
+                    images_.append(images[idx].clone())
+                    corners.append([min(max(tl[idx][0].numpy(), coord[0][0] - (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 1024 - tl[idx][0].numpy() + (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 
+                                    min(max(tl[idx][1].numpy(), coord[0][1] - (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 1024 - tl[idx][1].numpy() + (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 
+                                    min(max(tl[idx][0].numpy(), coord[0][2] - (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 1024 - tl[idx][0].numpy() + (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 
+                                    min(max(tl[idx][1].numpy(), coord[0][3] - (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 1024 - tl[idx][1].numpy() + (coord[0][3] - coord[0][1]) * bbox_expand_scale/2)])
                     tl_.append(tl[idx])
                     scale_.append(scale[idx])
                     position_.append(position[idx])
                     file_path_.append(file_path[idx])
             else:
+                images_.append(images[idx].clone())
                 corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
                 tl_.append(tl[idx])
                 scale_.append(scale[idx])
                 position_.append(position[idx])
                 file_path_.append(file_path[idx])
 
-        xyxy = torch.tensor(np.array(corners)).sub(torch.tensor(tl)).div(torch.tensor(scale)).int() #[Bx4] 
+
+
+        xyxy = torch.tensor(np.array(corners)).sub(torch.stack(tl_)).div(torch.tensor(scale_).view(-1,1)).int() #[Bx4] 
 
         tl_x, tl_y, br_x, br_y = zip(*xyxy)
         xywh = torch.stack([torch.tensor(tl_x), torch.tensor(tl_y), torch.tensor(br_x) - torch.tensor(tl_x), torch.tensor(br_y) - torch.tensor(tl_y)], dim = -1)
@@ -172,13 +176,13 @@ def main():
         image_id.extend(position_)
         file_names.extend(file_path_)
 
-        images = torch.tensor(
-            np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy(), (112,112)) for image, corner in zip(images, corners)])
+        images_ = torch.tensor(
+            np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy(), (112,112)) for image, corner in zip(images_, corners)])
             ).to(device)
-        images = images.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device)).div(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device))
+        images_ = images_.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device)).div(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device))
 
 
-        age, race, gender, mask, emotion, skintone = model(images)
+        age, race, gender, mask, emotion, skintone = model(images_)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         age = torch.argmax(age, dim = 1)
@@ -226,6 +230,15 @@ main()
 
 # if __name__ == 'main':
 #     main()
+
+
+
+
+
+
+
+
+
 
 
 
