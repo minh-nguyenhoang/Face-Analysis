@@ -138,7 +138,7 @@ def cutout(mask_size= 30, p= 0.5, cutout_inside= True, mask_color=(0, 0, 0)):
     offset = 1 if mask_size % 2 == 0 else 0
 
     def _cutout(image):
-        image = torch.tensor(image)
+        image = image.clone()
 
         if np.random.random() > p:
             return image
