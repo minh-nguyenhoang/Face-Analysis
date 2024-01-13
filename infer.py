@@ -76,7 +76,7 @@ class TestDataset(Dataset):
 
         image, tl, scale = self.get_image(path)
 
-        return torch.tensor(image), torch.tensor(tl), torch.tensor(scale)
+        return torch.tensor(image), torch.tensor(tl), torch.tensor(scale), self.position[index], self.file_names[index]
             
 
 def collate_fn(batch):
@@ -116,14 +116,14 @@ def main():
     test_dataset = TestDataset(root= '/kaggle/input/pixte-public-test/public_test/public_test', json_file= '/kaggle/input/pixte-public-test/public_test_and_submission_guidelin/public_test_and_submission_guidelines/file_name_to_image_id.json')
     test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 16)
 
-    bboxes, ages, races, genders, masks, emotions, skintones = [], [], [], [], [], [], []
+    file_names, bboxes, image_id, ages, races, genders, masks, emotions, skintones = [], [], [], [], [], [], [], [], []
 
     for idx, batch in enumerate(tqdm(test_dataloader)):
         '''
         tl should have size [Bx2]
         scale should have size [B]
         '''
-        images, tl, scale = batch
+        images, tl, scale, position, file_path = batch
         images = images.to(device) 
 
         tl = tl.view(-1,2) #[w,h]
@@ -135,21 +135,33 @@ def main():
         Checked in public_test, each image only has 1 bbox. 
         '''
         dets = face_detector(images) # [Bx4]
-        corners = []
-        corners = [[min(max(tl[idx][0], det[0][0][0] - (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 1024- tl[idx][0] + (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 
-                    min(max(tl[idx][1], det[0][0][1] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 
-                    min(max(tl[idx][0], det[0][0][2] - (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 1024- tl[idx][0] + (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 
-                    min(max(tl[idx][1], det[0][0][3] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2)] 
-                if len(det) >0 else [tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]] for idx, det in enumerate(dets)]
-        # for idx, det in enumerate(dets):
-        #     if len(det) >0:
-        #         coord = det[0][0]
-        #         corners.append([min(max(tl[idx][0], coord[0]), 1024- tl[idx][0]), min(max(tl[idx][1], coord[1]), 1024- tl[idx][1]), 
-        #                         min(max(tl[idx][0], coord[2]), 1024- tl[idx][0]), min(max(tl[idx][1], coord[3]), 1024- tl[idx][1])])
-        #     else:
-        #         corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
+        corners, tl_, scale_, position_, file_path_ = [], [], [], [], []
+        
+        # corners = [[min(max(tl[idx][0], det[0][0][0] - (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 1024- tl[idx][0] + (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 
+        #             min(max(tl[idx][1], det[0][0][1] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 
+        #             min(max(tl[idx][0], det[0][0][2] - (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 1024- tl[idx][0] + (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 
+        #             min(max(tl[idx][1], det[0][0][3] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2)] 
+        #         if len(det) >0 else [tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]] for idx, det in enumerate(dets)]
+        
+        for idx, det in enumerate(zip(dets, tl, scale, position)):
+            if len(det) >0:
+                for coord in det:
+                    corners.append([min(max(tl[idx][0], coord[0][0] - (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 1024 - tl[idx][0] + (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 
+                                    min(max(tl[idx][1], coord[0][1] - (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 1024 - tl[idx][1] + (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 
+                                    min(max(tl[idx][0], coord[0][2] - (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 1024 - tl[idx][0] + (coord[0][2] - coord[0][0]) * bbox_expand_scale/2), 
+                                    min(max(tl[idx][1], coord[0][3] - (coord[0][3] - coord[0][1]) * bbox_expand_scale/2), 1024 - tl[idx][1] + (coord[0][3] - coord[0][1]) * bbox_expand_scale/2)])
+                    tl_.append(tl[idx])
+                    scale_.append(scale[idx])
+                    position_.append(position[idx])
+                    file_path_.append(file_path[idx])
+            else:
+                corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
+                tl_.append(tl[idx])
+                scale_.append(scale[idx])
+                position_.append(position[idx])
+                file_path_.append(file_path[idx])
 
-        xyxy = torch.tensor(np.array(corners)).sub(tl).div(scale).int() #[Bx4]
+        xyxy = torch.tensor(np.array(corners)).sub(torch.tensor(tl)).div(torch.tensor(scale)).int() #[Bx4] 
 
         tl_x, tl_y, br_x, br_y = zip(*xyxy)
         xywh = torch.stack([torch.tensor(tl_x), torch.tensor(tl_y), torch.tensor(br_x) - torch.tensor(tl_x), torch.tensor(br_y) - torch.tensor(tl_y)], dim = -1)
@@ -157,6 +169,8 @@ def main():
 
 
         bboxes.extend(xywh.tolist())
+        image_id.extend(position_)
+        file_names.extend(file_path_)
 
         images = torch.tensor(
             np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy(), (112,112)) for image, corner in zip(images, corners)])
@@ -192,9 +206,9 @@ def main():
 
     
     submission_file = pd.DataFrame()
-    submission_file['file_name'] = pd.Series(test_dataloader.dataset.file_names, dtype= str)
+    submission_file['file_name'] = pd.Series(file_names, dtype= str)
     submission_file['bbox'] = pd.Series(bboxes)
-    submission_file['image_id'] = pd.Series(test_dataloader.dataset.position, dtype= str)
+    submission_file['image_id'] = pd.Series(image_id, dtype= str)
     submission_file['race'] = pd.Series(races)
     submission_file['age'] = pd.Series(ages)
     submission_file['age'].fillna(LabelMapping.get('age_map_rev').get(3))
