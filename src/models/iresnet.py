@@ -169,7 +169,7 @@ def _iresnet(arch, block, layers, pretrained, progress, **kwargs):
     model = IResNet(block, layers, **kwargs)
     if pretrained:
         if arch == 'iresnet100':
-            state_dict = torch.utils.model_zoo.load_url('https://github.com/minh-nguyenhoang/Face-Analysis/raw/dev-minh/src/models/iresnet_weights/backbone.pth?download=',
+            state_dict = torch.utils.model_zoo.load_url('https://github.com/minh-nguyenhoang/Face-Analysis/releases/download/backbone/backbone.pth',
                                                          map_location=lambda storage, loc: storage)
             model.load_state_dict(state_dict, strict= False)
         else:
