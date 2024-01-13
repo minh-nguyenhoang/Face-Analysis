@@ -9,7 +9,7 @@ from .frelu import FReLU
 from .gdn import GDN, FC
 
 class GroupFace(nn.Module):
-    def __init__(self, in_channels=1024, out_channels=256, groups=4, mode='S'):
+    def __init__(self, in_channels=1024, out_channels=256, groups=4, mode='S', n_attributes:int = 6):
         super(GroupFace, self).__init__()
         self.mode = mode
         self.groups = groups
