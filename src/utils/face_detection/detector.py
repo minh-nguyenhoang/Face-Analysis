@@ -40,7 +40,7 @@ class RetinaFace:
         gpu_id= None,
         model_path=None,
         network="mobilenet",
-        device: str|None = None,
+        device:None = None,
     ):
         self.gpu_id = gpu_id
         self.device = (

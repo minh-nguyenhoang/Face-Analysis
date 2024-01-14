@@ -126,4 +126,3 @@ if __name__ == "__main__":
 #     print(model(x))
   
   trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='', device=device)
-    
