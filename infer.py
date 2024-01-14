@@ -198,8 +198,8 @@ def main():
 
         age, race, gender, mask, emotion, skintone = model(images_)
 
-        # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
-        age = torch.argmax(age, dim = 1)
+        age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
+        # age = torch.argmax(age, dim = 1)
         race = torch.argmax(race, dim = 1)
 
         gender = torch.squeeze(torch.sigmoid(gender)  > 0.5, dim = 1).int()

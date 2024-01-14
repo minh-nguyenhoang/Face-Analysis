@@ -26,7 +26,7 @@ class BioNet(nn.Module):
         self.age_branch = nn.Sequential(
             nn.Linear(out_channels, 512),
             nn.ReLU(),
-            nn.Linear(512, 6)
+            CORAL(512, 5)
         )
 
         self.race_branch = nn.Sequential(
