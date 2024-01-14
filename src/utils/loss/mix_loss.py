@@ -16,7 +16,7 @@ class BinFocalLoss(nn.Module):
         self.reduction = reduction
         
     def forward(self, inputs, targets):
-        bce_loss = F.binary_cross_entropy(inputs, targets, reduction='none')
+        bce_loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
         p_t = torch.exp(-bce_loss)
         alpha_tensor = (1 - self.alpha) + targets * (2 * self.alpha - 1)  # alpha if target = 1 and 1 - alpha if target = 0
         f_loss = alpha_tensor * (1 - p_t) ** self.gamma * bce_loss
