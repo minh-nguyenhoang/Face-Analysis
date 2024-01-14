@@ -92,9 +92,8 @@ def collate_fn(batch):
                 ret.append(torch.stack(item, dim= 0))
             except:
                 ret.append(item)
-
-    print(len([*zip(*batch)]))
-
+        else:
+            ret.append(item)
     return ret
 
 
