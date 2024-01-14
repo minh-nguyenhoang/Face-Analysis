@@ -78,7 +78,7 @@ class PixtaDataset(Dataset):
     def __transform__(self, x):
         x = letterbox(x, (112, 112))
         x = np.transpose(x, (2,1,0))
-        x = x[::-1]
+        x = x[::-1].copy()
         x = torch.from_numpy(x).float()
         x = x / 255.0
         if self.phase == 'train':
