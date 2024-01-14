@@ -63,7 +63,7 @@ class TestDataset(Dataset):
     def get_image(self, path):
         image = cv2.imread(path, cv2.IMREAD_COLOR)
         assert image is not None
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         scaled_padded_image, tl, scale = letterbox(image, self.temp_size, return_extra_args= True)
 
