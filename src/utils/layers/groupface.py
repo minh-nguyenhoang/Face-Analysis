@@ -47,8 +47,7 @@ class GroupFace(nn.Module):
                                             nn.Conv2d(in_channels, in_channels, 7, groups= in_channels),
                                             nn.AdaptiveAvgPool2d(1),
                                             nn.Flatten(1),
-                                            FC(in_channels, in_channels// 8),
-                                            nn.Linear(in_channels// 8, out_channels)
+                                            FC(in_channels, out_channels)
         ) for i in range(n_attributes)])
         self.gdn = GDN(out_channels*n_attributes, groups)
         self.share_group_conv = nn.Sequential(
@@ -57,8 +56,7 @@ class GroupFace(nn.Module):
                                             nn.Flatten(1))
         self.group_fc = nn.ModuleList([nn.Sequential(
                                             self.share_group_conv,
-                                            FC(in_channels, in_channels// 8),
-                                            nn.Linear(in_channels// 8, out_channels)
+                                            FC(in_channels, out_channels)
         ) for i in range(groups)])
         
         self.out_channels = out_channels
