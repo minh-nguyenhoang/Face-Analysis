@@ -64,7 +64,7 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
 
             # age_pred = torch.argmax(out_age, dim=1)
             age_pred = torch.sum(out_age, dim=1)
-            age = torch.sum(age, dim= 1)
+            age_label = torch.sum(age, dim= 1)
 
             gender_pred = torch.sigmoid(out_gender)  > 0.5
             masked_pred = torch.sigmoid(out_masked)  > 0.5
@@ -79,7 +79,7 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
             preds['emotion'].append(emotion_pred)
             preds['skin'].append(skin_pred)
 
-            labels['age'].append(age)
+            labels['age'].append(age_label)
             labels['gender'].append(gender)
             labels['masked'].append(masked)
             labels['race'].append(race)
