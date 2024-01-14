@@ -79,7 +79,7 @@ class BioNet(nn.Module):
             return age, race, gender, mask, emotion, skintone
     
     @classmethod
-    def from_inputs(cls, backbone: nn.Module, out_channels:int = 512, n_groups: int = 32, n_attributes:int = 6, inputs: torch.Tensor= None, input_shape: torch.Size=None, fine_tune=False):
+    def from_inputs(cls, backbone: nn.Module, out_channels:int = 512, n_groups: int = 16, n_attributes:int = 6, inputs: torch.Tensor= None, input_shape: torch.Size=None, fine_tune=False):
         if inputs is None:
             assert input_shape is not None, "Input shape must not be empty if inputs is not provided."
             device = next(backbone.parameters()).device
