@@ -102,9 +102,9 @@ class IResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[2])
         self.bn2 = nn.BatchNorm2d(512 * block.expansion, eps=1e-05,)
         self.dropout = nn.Dropout(p=dropout, inplace=True)
-
+        
         self.fc = nn.Sequential(
-                                nn.Conv2d(512 * block.expansion, 512 * block.expansion, groups= 512 * block.expansion),
+                                nn.Conv2d(512 * block.expansion, 512 * block.expansion, 7, groups= 512 * block.expansion),
                                 nn.Conv2d(512 * block.expansion, num_features, 1),
                                 nn.AdaptiveAvgPool2d(1),
                                 nn.Flatten(1))
