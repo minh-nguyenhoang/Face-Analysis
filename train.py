@@ -62,7 +62,10 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
             out = model(xb)
             out_age, out_race, out_gender, out_masked, out_emotion, out_skin = out
 
-            age_pred = torch.argmax(out_age, dim=1)
+            # age_pred = torch.argmax(out_age, dim=1)
+            age_pred = torch.sum(out_age, dim=1)
+            age = torch.sum(age, dim= 1)
+
             gender_pred = torch.sigmoid(out_gender)  > 0.5
             masked_pred = torch.sigmoid(out_masked)  > 0.5
 
