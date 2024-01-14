@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
   backbone = iresnet100(pretrained= True, num_features = 1024,)
 
-  loss_func = multi_task_loss()
+  loss_func = multi_task_loss(device=device)
 
   model = BioNet(backbone, 1024, 512, fine_tune=args.finetune)
   model.to(device)
