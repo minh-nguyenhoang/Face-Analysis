@@ -63,7 +63,7 @@ class TestDataset(Dataset):
     def get_image(self, path):
         image = cv2.imread(path, cv2.IMREAD_COLOR)
         assert image is not None
-        # image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         scaled_padded_image, tl, scale = letterbox(image, self.temp_size, return_extra_args= True)
 
@@ -177,7 +177,7 @@ def main():
         file_names.extend(file_path_)
 
         images_ = torch.tensor(
-            np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy(), (112,112)) for image, corner in zip(images_, corners)])
+            np.array([cv2.cvtColor(letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy(), (112,112)), cv2.COLOR_RGB2BGR) for image, corner in zip(images_, corners)])
             ).to(device)
         images_ = images_.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device)).div(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device))
 
