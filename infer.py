@@ -93,7 +93,7 @@ def collate_fn(batch):
             except:
                 ret.append(item)
 
-    print(len(zip(*batch)))
+    print(len([*zip(*batch)]))
 
     return ret
 
