@@ -39,11 +39,11 @@ class PixtaDataset(Dataset):
                                             transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
                                             RandomGammaCorrection(),
                                             cutout(),
-                                            transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)),
+                                            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
                                             ])
         self.test_transform = transforms.Compose([
                                         #    transforms.ToTensor(),
-                                            transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)),
+                                            transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),
                                             ])
         
         self.age_map = {'Baby':0, 'Kid': 1, 'Teenager': 2,'Senior': 4,'20-30s': 3,'40-50s': 5}
@@ -78,7 +78,7 @@ class PixtaDataset(Dataset):
         # print(type(self.age_map))
     
     def __transform__(self, x):
-        x = letterbox(x, (112, 112))
+        x = letterbox(x, (224, 224))
         x = np.transpose(x, (2,0,1))
         x = torch.from_numpy(x).float()
         x = x / 255.0
