@@ -67,23 +67,33 @@ class TestDataset(Dataset):
 
         scaled_padded_image, tl, scale = letterbox(image, self.temp_size, return_extra_args= True)
 
-        return scaled_padded_image, tl, scale
+        return scaled_padded_image, tl, scale, image
 
 
     
     def __getitem__(self, index) -> Any:
         path = os.path.join(self.root, self.file_names[index])
 
-        image, tl, scale = self.get_image(path)
+        image, tl, scale, raw_image = self.get_image(path)
 
-        return torch.tensor(image), torch.tensor(tl), torch.tensor(scale), self.position[index], self.file_names[index]
+        return torch.tensor(image), torch.tensor(tl), torch.tensor(scale), self.position[index], self.file_names[index], raw_image
             
 
 def collate_fn(batch):
     '''
     return pseudo batch with uneven
     '''
-    return zip(*batch)
+
+    ret = []
+
+    for item in zip(*batch):
+        if isinstance(item[0], torch.Tensor):
+            try:
+                ret.append(torch.stack(item, dim= 0))
+            except:
+                ret.append(item)
+
+    return ret
 
 
 @torch.no_grad()
@@ -114,7 +124,7 @@ def main():
     model.eval()
 
     test_dataset = TestDataset(root= '/kaggle/input/pixte-public-test/public_test/public_test', json_file= '/kaggle/input/pixte-public-test/public_test_and_submission_guidelin/public_test_and_submission_guidelines/file_name_to_image_id.json')
-    test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 16)
+    test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 16, collate_fn= collate_fn)
 
     file_names, bboxes, image_id, ages, races, genders, masks, emotions, skintones = [], [], [], [], [], [], [], [], []
 
@@ -123,7 +133,7 @@ def main():
         tl should have size [Bx2]
         scale should have size [B]
         '''
-        images, tl, scale, position, file_path = batch
+        images, tl, scale, position, file_path, raw_images = batch
         images = images.to(device) 
 
         tl = tl.view(-1,2) #[w,h]
@@ -135,7 +145,7 @@ def main():
         Checked in public_test, each image only has 1 bbox. 
         '''
         dets = face_detector(images) # [Bx4]
-        images_, corners, tl_, scale_, position_, file_path_ = [], [], [], [], [], []
+        images_, corners, tl_, scale_, position_, file_path_, raw_images_ = [], [], [], [], [], [], []
         
         # corners = [[min(max(tl[idx][0], det[0][0][0] - (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 1024- tl[idx][0] + (det[0][0][2] -det[0][0][0])* bbox_expand_scale/2), 
         #             min(max(tl[idx][1], det[0][0][1] - (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 1024- tl[idx][1] + (det[0][0][3] -det[0][0][1])* bbox_expand_scale/2), 
@@ -155,6 +165,7 @@ def main():
                     scale_.append(scale[idx])
                     position_.append(position[idx])
                     file_path_.append(file_path[idx])
+                    raw_images_.append(raw_images[idx])
             else:
                 images_.append(images[idx].clone())
                 corners.append([tl[idx][0], tl[idx][1], 1024 - tl[idx][0], 1024 - tl[idx][1]])
@@ -162,6 +173,7 @@ def main():
                 scale_.append(scale[idx])
                 position_.append(position[idx])
                 file_path_.append(file_path[idx])
+                raw_images_.append(raw_images[idx])
 
 
 
@@ -177,7 +189,7 @@ def main():
         file_names.extend(file_path_)
 
         images_ = torch.tensor(
-            np.array([letterbox(image[int(corner[0]):int(corner[2]), int(corner[1]): int(corner[3])].cpu().numpy(), (112,112)) for image, corner in zip(images_, corners)])
+            np.array([letterbox(image[tl_x:br_x, tl_y:br_y].cpu().numpy(), (112,112)) for image, corner in zip(raw_images_, corners)])
             ).to(device)
         images_ = images_.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device)).div(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device))
 

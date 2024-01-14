@@ -60,12 +60,12 @@ class BioNet(nn.Module):
 
         final, group_inter, group_prob = self.cfc(feat)
 
-        age = self.age_branch(final)
-        race = self.race_branch(final)
-        gender = self.gender_branch(final)
-        mask = self.masked_branch(final)
-        emotion = self.emotion_branch(final)
-        skintone = self.skintone_branch(final)
+        age = self.age_branch(final[0])
+        race = self.race_branch(final[1])
+        gender = self.gender_branch(final[2])
+        mask = self.masked_branch(final[3])
+        emotion = self.emotion_branch(final[4])
+        skintone = self.skintone_branch(final[5])
 
         if self.training:
             return age, race, gender, mask, emotion, skintone, group_prob
