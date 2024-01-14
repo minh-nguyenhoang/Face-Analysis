@@ -92,6 +92,8 @@ def collate_fn(batch):
                 ret.append(torch.stack(item, dim= 0))
             except:
                 ret.append(item)
+        else:
+            ret.append(item)
 
     return ret
 
@@ -189,7 +191,7 @@ def main():
         file_names.extend(file_path_)
 
         images_ = torch.tensor(
-            np.array([letterbox(image[tl_x[idx]:br_x[idx], tl_y[idx]:br_y[idx]].cpu().numpy(), (112,112)) for image, corner in zip(raw_images_, corners)])
+            np.array([letterbox(image[tl_x[idx]:br_x[idx], tl_y[idx]:br_y[idx]], (112,112)) for image, corner in zip(raw_images_, corners)])
             ).to(device)
         images_ = images_.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device)).div(torch.tensor([0.5, 0.5, 0.5]).view(1,3,1,1).to(device))
 
