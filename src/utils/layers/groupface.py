@@ -81,6 +81,6 @@ class GroupFace(nn.Module):
             label = torch.argmax(group_prob, dim=1)
             group_ensembled = self.group_fc[label](x)    
 
-        coeffs = torch.split(self.attribute_disentangle(group_ensembled), 1, dim= 1)
+        coeffs = torch.sigmoid(torch.split(self.attribute_disentangle(group_ensembled), 1, dim= 1))
         final:torch.Tensor = [attr_rep + coeff*group_ensembled for attr_rep, coeff in zip(instacne_representation, coeffs)]
         return final, group_inter, group_prob
