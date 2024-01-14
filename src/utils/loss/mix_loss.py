@@ -27,8 +27,8 @@ class BinFocalLoss(nn.Module):
 class multi_task_loss(nn.Module):
     def __init__(self, device='cuda'):
         super().__init__()
-        self.age_loss = FocalLoss(gamma= 2, weight=torch.tensor([1.,1.,1.,0.25,1.,1.]).to(device))
-        self.gender_loss = BinFocalLoss(alpha=torch.tensor([0.5, 1.]).to(device))
+        self.age_loss = FocalLoss(gamma= 2, alpha=torch.tensor([1.,1.,1.,0.25,1.,1.]).to(device))
+        self.gender_loss = BinFocalLoss(weight=torch.tensor([0.5, 1.]).to(device))
         self.masked_loss = nn.BCEWithLogitsLoss()
         self.race_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.]).to(device))
         self.skin_loss = FocalLoss(gamma= 2, alpha=torch.tensor([ 0.25, 0.5, 1., 1.]).to(device))
