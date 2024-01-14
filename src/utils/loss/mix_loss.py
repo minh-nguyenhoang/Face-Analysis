@@ -33,4 +33,4 @@ class multi_task_loss(nn.Module):
         loss_race = self.race_loss(race_pred, race)
         loss_skin = self.skin_loss(skintone_pred, skin)
         loss_emo = self.emo_loss(emotion_pred, emotion)
-        return 2*loss_age + loss_gender + loss_masked + 2*loss_emo + 2*loss_race + 2*loss_skin
+        return loss_age + loss_gender + loss_masked + loss_emo + loss_race + loss_skin
