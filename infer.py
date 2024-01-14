@@ -93,6 +93,8 @@ def collate_fn(batch):
             except:
                 ret.append(item)
 
+    print(ret)
+
     return ret
 
 
