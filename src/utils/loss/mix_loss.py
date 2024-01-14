@@ -2,23 +2,33 @@ import torch
 import torch.nn as nn
 from .focal_loss import FocalLoss
 
-class Bin_FocalLoss(nn.Module):
-    def __init__(self, alpha=0.25, gamma=2): 
-        super(Bin_FocalLoss, self).__init__()
-        self.alpha = alpha
-        self.gamma = gamma
-        self.binary_ce = nn.BCEWithLogitsLoss(reduction='none')
-    def forward(self, inputs, targets): 
-        BCE_loss = self.binary_ce(inputs, targets)
-        pt = torch.exp(-BCE_loss)
-        F_loss = self.alpha * (1-pt)**self.gamma * BCE_loss
-        return torch.mean(F_loss)
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class BinFocalLoss(nn.Module):
     
+    def __init__(self, weight=None, 
+                 gamma=2., reduction='none'):
+        nn.Module.__init__(self)
+        self.weight = weight
+        self.gamma = gamma
+        self.reduction = reduction
+        
+    def forward(self, input_tensor, target_tensor):
+        log_prob = F.log_softmax(input_tensor, dim=-1)
+        prob = torch.exp(log_prob)
+        return F.nll_loss(
+            ((1 - prob) ** self.gamma) * log_prob, 
+            target_tensor, 
+            weight=self.weight,
+            reduction = self.reduction
+        )
 class multi_task_loss(nn.Module):
     def __init__(self, device='cuda'):
         super().__init__()
         self.age_loss = FocalLoss(gamma= 2, alpha=torch.tensor([1.,1.,1.,0.25,1.,1.]).to(device))
-        self.gender_loss = nn.BCEWithLogitsLoss()
+        self.gender_loss = BinFocalLoss(alpha=torch.tensor([0.5, 1.]).to(device))
         self.masked_loss = nn.BCEWithLogitsLoss()
         self.race_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.]).to(device))
         self.skin_loss = FocalLoss(gamma= 2, alpha=torch.tensor([ 0.25, 0.5, 1., 1.]).to(device))
