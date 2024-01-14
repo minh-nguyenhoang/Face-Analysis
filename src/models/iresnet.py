@@ -104,7 +104,7 @@ class IResNet(nn.Module):
         self.dropout = nn.Dropout(p=dropout, inplace=True)
 
         self.fc = nn.Sequential(
-                                nn.Conv2d(512 * block.expansion, 512 * block.expansion, groups= 512 * block.expansion)
+                                nn.Conv2d(512 * block.expansion, 512 * block.expansion, groups= 512 * block.expansion),
                                 nn.Conv2d(512 * block.expansion, num_features, 1),
                                 nn.AdaptiveAvgPool2d(1),
                                 nn.Flatten(1))
