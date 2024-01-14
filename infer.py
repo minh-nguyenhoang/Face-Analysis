@@ -99,10 +99,10 @@ def main():
 
     face_detector = RetinaFace(network= 'resnet50', device= device, gpu_id= None)
 
-    # backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=False)
-    # backbone.head = nn.Identity()
+    backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=False)
+    backbone.head = nn.Identity()
 
-    backbone = iresnet100(pretrained= True, num_features = 1024,)
+    # backbone = iresnet100(pretrained= True, num_features = 1024,)
 
     model: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,112,112))
     try:
