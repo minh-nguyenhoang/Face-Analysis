@@ -8,3 +8,4 @@ answer.csv
 *__pycache__
 *Pytorch_Retinaface
 public_test
+*.csv
