@@ -11,8 +11,8 @@ class FC(nn.Module):
     def __init__(self, inplanes, outplanes):
         super(FC, self).__init__()
         self.fc = nn.Linear(inplanes, outplanes)
-        # self.act = nn.PReLU()
-        self.act = FReLU(outplanes)
+        self.act = nn.PReLU()
+        # self.act = nn.ReLU()
 
     def forward(self, x):
         x = self.fc(x)
