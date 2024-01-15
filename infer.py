@@ -205,7 +205,7 @@ def main():
                 image[int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
                       int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
                       int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
-                      int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)), cv2.COLOR_RGB2BGR) for image, corner in zip(images_, corners)])
+                      int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224))) for image, corner in zip(images_, corners)])
             ).to(device)
         image_emo = image_emo.permute(0,3,1,2).div(255.0)
 
