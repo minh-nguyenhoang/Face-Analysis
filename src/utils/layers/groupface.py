@@ -45,21 +45,10 @@ class GroupFace_M(nn.Module):
         super(GroupFace_M, self).__init__()
         self.mode = mode
         self.groups = groups
-        self.instance_fc = nn.ModuleList([nn.Sequential(
-                                            nn.Conv2d(in_channels, in_channels, 7, groups= in_channels),
-                                            nn.AdaptiveAvgPool2d(1),
-                                            nn.Flatten(1),
-                                            FC(in_channels, out_channels)
-        ) for i in range(n_attributes)])
+        self.instance_fc = nn.ModuleList(FC(in_channels, out_channels) for i in range(n_attributes))
         self.gdn = GDN(out_channels*n_attributes, groups)
-        self.share_group_conv = nn.Sequential(
-                                            nn.Conv2d(in_channels, in_channels, 7, groups= in_channels),
-                                            nn.AdaptiveAvgPool2d(1),
-                                            nn.Flatten(1))
-        self.group_fc = nn.ModuleList([nn.Sequential(
-                                            self.share_group_conv,
-                                            FC(in_channels, out_channels)
-        ) for i in range(groups)])
+
+        self.group_fc = nn.ModuleList(FC(in_channels, out_channels) for i in range(groups))
         
         self.out_channels = out_channels
         self.n_attributes = n_attributes
