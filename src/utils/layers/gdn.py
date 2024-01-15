@@ -23,8 +23,10 @@ class FCL(nn.Module):
         super(FCL, self).__init__()
         self.fc = nn.Sequential(
             nn.Linear(inplanes, inplanes//2),
+            nn.BatchNorm1d(inplanes//2),
             nn.ReLU(),
             nn.Linear(inplanes//2, inplanes//4),
+            nn.BatchNorm1d(inplanes//4),
             nn.ReLU(),
             nn.Linear(inplanes//4, outplanes)
         )
