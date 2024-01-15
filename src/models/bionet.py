@@ -210,4 +210,4 @@ class BioNet_M(nn.Module):
         backbone.train(train_state)
         return cls(backbone, out_shape[1], out_channels, n_groups, n_attributes, fine_tune)
     
-BioNet = BioNet_S
+BioNet = BioNet_M
