@@ -9,3 +9,5 @@ answer.csv
 *Pytorch_Retinaface
 public_test
 *.csv
+*pretrained_ckpt
+*.caffemodel

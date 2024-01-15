@@ -4,6 +4,7 @@ import torch.nn as nn
 import torchvision.models._utils as _utils
 import torchvision.models as models
 import torch.nn.functional as F
+from rmn import RMN
 
 import torchvision.models.detection.backbone_utils as backbone_utils
 from collections import OrderedDict
@@ -25,6 +26,18 @@ from src.utils.label_mapping import LabelMapping
 import timm
 from tqdm.auto import tqdm
 from argparse import ArgumentParser
+
+
+FER_2013_EMO_DICT = {
+    0: "Angry",
+    1: "Disgust",
+    2: "Fear",
+    3: "Happy",
+    4: "Sad",
+    5: "Surprise",
+    6: "Neutral",
+}
+
 
 parser = ArgumentParser(
                     prog='Pixta AI Hackathon - Face Analysis',
@@ -111,6 +124,8 @@ def main():
         model.load_state_dict(torch.load(f'{args.fname}', map_location= 'cpu'))
 
     model = model.to(face_detector.device)
+    emo_model = RMN(False).emo_model.to(face_detector.device)
+    
     model.eval()
 
     test_dataset = TestDataset(root= '/kaggle/input/pixte-public-test/public_test/public_test', json_file= '/kaggle/input/pixte-public-test/public_test_and_submission_guidelin/public_test_and_submission_guidelines/file_name_to_image_id.json')
@@ -181,8 +196,11 @@ def main():
             ).to(device)
         images_ = images_.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
 
+        image_emo = images_.mul(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device)).add(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device))
+
 
         age, race, gender, mask, emotion, skintone = model(images_)
+        true_emo = emo_model(image_emo)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         age = torch.argmax(age, dim = 1)
@@ -192,6 +210,8 @@ def main():
         mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = 1).int()
 
         emotion = torch.argmax(emotion, dim = 1)
+        true_emo = torch.argmax(true_emo, dim = 1)
+
         skintone = torch.argmax(skintone, dim = 1)
 
         age_pred = [LabelMapping.get('age_map_rev').get(a, None) for a in age.cpu().tolist()]
@@ -199,13 +219,15 @@ def main():
         gender_pred = [LabelMapping.get('gender_map_rev').get(a, None) for a in gender.cpu().tolist()]
         mask_pred = [LabelMapping.get('masked_map_rev').get(a, None) for a in mask.cpu().tolist()]
         emotion_pred = [LabelMapping.get('emotion_map_rev').get(a, None) for a in emotion.cpu().tolist()]
+        true_emo_pred = [FER_2013_EMO_DICT.get(a, None) for a in true_emo.cpu().tolist()] 
+
         skintone_pred = [LabelMapping.get('skintone_map_rev').get(a, None) for a in skintone.cpu().tolist()]
 
         ages.extend(age_pred)
         races.extend(race_pred)
         genders.extend(gender_pred)
         masks.extend(mask_pred)
-        emotions.extend(emotion_pred)
+        emotions.extend(true_emo_pred)
         skintones.extend(skintone_pred)
 
     
