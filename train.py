@@ -172,10 +172,12 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
         m_age_acc, m_gender_acc, m_masked_acc, m_emotion_acc, m_race_acc, m_skin_acc = [], [], [], [], [], []
         # Training
         model.train()
-        for idx, (xb, age, gender, masked, emotion, race, skin) in enumerate(tqdm(train_dl)):
+        pbar = tqdm(train_dl)
+        for idx, (xb, age, gender, masked, emotion, race, skin) in enumerate(pbar):
             train_loss, nums, train_metric, _,_,_,_,_,_ = loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, opt, metric=metric, device=device)
             avg_loss.append(train_loss)
             avg_train_metric.append(train_metric)
+            pbar.set_postfix( {'loss': train_loss})
 
         # Evaluation
         mean_loss = torch.mean(torch.Tensor(avg_loss))
