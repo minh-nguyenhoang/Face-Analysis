@@ -63,7 +63,7 @@ class BioNet_S(nn.Module):
 
         _, attr = self.cfc(feat)
 
-        add_attr, _, group_prob = self.group_face(_)
+        add_attr, _, group_prob = self.group_face(feat)
 
         _, contribution = self.contribution_net(feat)
         contribution = torch.split(contribution, 1, dim= -1)
