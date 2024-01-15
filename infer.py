@@ -197,7 +197,11 @@ def main():
         images_ = images_.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
 
         image_emo = torch.tensor(
-            np.array([cv2.cvtColor(cv2.resize(image[int(corner[1] - 0.1*(corner[3]-corner[1])):int(corner[3] +  0.1*(corner[3]-corner[1])), int(corner[0] - 0.1*(corner[2]-corner[0])): int(corner[2] + 0.1*(corner[2]-corner[0]))].cpu().numpy(), (224,224)), cv2.COLOR_RGB2BGR) for image, corner in zip(images_, corners)])
+            np.array([cv2.cvtColor(cv2.resize(
+                image[int(max(image.shape[0], min(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
+                      int(max(image.shape[0], min(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
+                      int(max(image.shape[1], min(0, corner[0] - 0.1*(corner[2]-corner[0])))):
+                      int(max(image.shape[1], min(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)), cv2.COLOR_RGB2BGR) for image, corner in zip(images_, corners)])
             ).to(device)
         image_emo = images_.mul(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device)).add(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device))
 
