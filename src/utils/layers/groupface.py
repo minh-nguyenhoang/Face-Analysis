@@ -46,9 +46,10 @@ class GroupFace_M(nn.Module):
         self.mode = mode
         self.groups = groups
         self.instance_fc = nn.ModuleList(FC(in_channels, out_channels) for i in range(n_attributes))
-        self.gdn = GDN(out_channels*n_attributes, groups)
+        self.mixer = nn.Linear(in_channels*n_attributes, in_channels)
+        self.gdn = GDN(out_channels, groups)
 
-        self.group_fc = nn.ModuleList(FC(in_channels, out_channels) for i in range(groups))
+        self.group_fc = nn.ModuleList(FC(out_channels*n_attributes, out_channels) for i in range(groups))
         
         self.out_channels = out_channels
         self.n_attributes = n_attributes
@@ -58,18 +59,20 @@ class GroupFace_M(nn.Module):
 
     def forward(self, x: Iterable[torch.Tensor]):
         instacne_representation = [module(x_) for x_, module in zip(x,self.instance_fc)] 
-        print(torch.cat(instacne_representation,dim= -1).shape)
+
+        mixed_x = self.mixer(torch.cat(x, dim= -1))
+
         # GDN
         group_inter, group_prob = self.gdn(torch.cat(instacne_representation,dim= -1))
         # group aware repr
 
         # group ensemble
         if self.mode == 'S':
-            v_G = torch.stack([Gk(x) for Gk in self.group_fc], dim= 1)  # (B,n_groups,512)
+            v_G = torch.stack([Gk(mixed_x) for Gk in self.group_fc], dim= 1)  # (B,n_groups,512)
             group_ensembled = torch.mul(v_G, group_prob.view(group_prob.shape[0], group_prob.shape[1], 1)).sum(dim=1)
         else:
             label = torch.argmax(group_prob, dim=1)
-            group_ensembled = self.group_fc[label](x)    
+            group_ensembled = self.group_fc[label](mixed_x)    
 
         coeffs = torch.split(torch.sigmoid(self.attribute_disentangle(group_ensembled)), 1, dim= 1)
         final:torch.Tensor = [attr_rep + coeff*group_ensembled for attr_rep, coeff in zip(instacne_representation, coeffs)]
