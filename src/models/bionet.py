@@ -87,7 +87,7 @@ class BioNet_S(nn.Module):
 
         id, attr = self.cfc(feat)
 
-        # print(id.shape)
+        print(id.shape)
 
         add_attr, _, group_prob = self.group_face(id)
 
