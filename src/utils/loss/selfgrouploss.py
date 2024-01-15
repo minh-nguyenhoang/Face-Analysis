@@ -16,6 +16,7 @@ class SelfGroupingLoss(nn.Module):
         self.size_average = size_average
         self.ignore_index = ignore_index
         self.critetion = nn.NLLLoss(weight= weight, size_average= size_average, ignore_index= ignore_index, reduction = reduction)
+        self.critetion = nn.CrossEntropyLoss()
 
     def forward(self, inputs: Tensor, targets: Tensor= None):
 
@@ -28,7 +29,7 @@ class SelfGroupingLoss(nn.Module):
             group_label_u: torch.Tensor = (inputs - group_label_E) / groups + 1 / groups
             targets = torch.argmax(group_label_u, dim = -1).detach()
 
-        log_prob = torch.log(inputs)
+        log_prob = torch.log(inputs + 1e-8)
 
         loss = self.critetion(log_prob, targets)
 
