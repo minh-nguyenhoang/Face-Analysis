@@ -23,6 +23,9 @@ class GroupFace_S(nn.Module):
 
     def forward(self, x: torch.Tensor):
         instacne_representation = self.instance_fc(x)
+
+        print(instacne_representation.shape)
+
         # GDN
         group_inter, group_prob = self.gdn(instacne_representation)
         # group aware repr
