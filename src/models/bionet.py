@@ -22,7 +22,7 @@ class BioNet_S(nn.Module):
 
         self.cfc = CFC(in_channels, out_channels, n_attributes)
 
-        self.group_face = GroupFace_S(in_channels, out_channels, groups= n_groups)
+        self.group_face = GroupFace_S(out_channels, out_channels, groups= n_groups)
         self.contribution_net = CDN(out_channels, n_groups)
 
         # self.age_branch = CORAL(in_features=out_channels, out_features=6)
@@ -63,7 +63,7 @@ class BioNet_S(nn.Module):
 
         _, attr = self.cfc(feat)
 
-        add_attr, _, group_prob = self.group_face(feat)
+        add_attr, _, group_prob = self.group_face(_)
 
         _, contribution = self.contribution_net(feat)
         contribution = torch.split(contribution, 1, dim= -1)
