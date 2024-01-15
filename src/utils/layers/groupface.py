@@ -16,7 +16,7 @@ class GroupFace_S(nn.Module):
         self.mode = mode
         self.groups = groups
         self.instance_fc = FC(in_channels, out_channels)
-        self.gdn = GDN(out_channels, groups)
+        self.gdn = GDN(in_channels, groups)
         self.group_fc = nn.ModuleList([FC(in_channels, out_channels) for i in range(groups)])
         
         self.out_channels = out_channels
