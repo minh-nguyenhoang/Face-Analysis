@@ -36,7 +36,7 @@ class GDN(nn.Module):
 
 class CDN(nn.Module):
     def __init__(self, inplanes, outplanes, intermediate_dim=256):
-        super(GDN, self).__init__()
+        super(CDN, self).__init__()
         self.fc1 = FC(inplanes, intermediate_dim)
         self.fc2 = nn.Linear(intermediate_dim, outplanes)
         self.softmax = nn.Softmax()
