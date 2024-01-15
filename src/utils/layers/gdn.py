@@ -20,7 +20,7 @@ class FC(nn.Module):
 
 class FCL(nn.Module):
     def __init__(self, inplanes, outplanes):
-        super(FC, self).__init__()
+        super(FCL, self).__init__()
         self.fc = nn.Sequential(
             nn.Linear(inplanes, inplanes//2),
             nn.ReLU(inplace= True),
