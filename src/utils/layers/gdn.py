@@ -33,3 +33,16 @@ class GDN(nn.Module):
         # return intermediate, self.softmax(out)
         return intermediate, torch.softmax(out, dim=1)
     
+
+class CDN(nn.Module):
+    def __init__(self, inplanes, outplanes, intermediate_dim=256):
+        super(GDN, self).__init__()
+        self.fc1 = FC(inplanes, intermediate_dim)
+        self.fc2 = nn.Linear(intermediate_dim, outplanes)
+        self.softmax = nn.Softmax()
+
+    def forward(self, x):
+        intermediate = self.fc1(x)
+        out = self.fc2(intermediate)
+        # return intermediate, self.softmax(out)
+        return intermediate, torch.sigmoid(out)    
