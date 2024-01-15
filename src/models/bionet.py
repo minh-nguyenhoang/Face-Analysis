@@ -20,7 +20,7 @@ class BioNet_S(nn.Module):
         self.vcn = backbone
         self.in_channels = in_channels
 
-        self.cfc = CFC(in_channels, out_channels, n_attributes)
+        self.cfc = CFC(in_channels, in_channels, n_attributes)
 
         self.group_face = GroupFace_S(in_channels, out_channels, groups= n_groups)
         self.contribution_net = CDN(in_channels, n_groups)
@@ -97,9 +97,9 @@ class BioNet_S(nn.Module):
         backbone.train(train_state)
         return cls(backbone, out_shape[1], out_channels, n_groups, n_attributes, fine_tune)
 
-BioNet = BioNet_S  
 
-class BioNet(nn.Module):
+
+class BioNet_M(nn.Module):
     def __init__(self, backbone: nn.Module, in_channels, out_channels:int = 512, n_groups:int = 16, n_attributes:int = 6, fine_tune=False) -> None:
         super().__init__()
         
@@ -110,7 +110,7 @@ class BioNet(nn.Module):
         self.vcn = backbone
         self.in_channels = in_channels
 
-        self.cfc = CFC(in_channels, out_channels, n_attributes)
+        self.cfc = CFC(in_channels, in_channels, n_attributes)
 
         self.group_face = GroupFace_M(in_channels, out_channels, groups= n_groups)
 
@@ -183,3 +183,5 @@ class BioNet(nn.Module):
         out_shape = backbone(inputs).shape
         backbone.train(train_state)
         return cls(backbone, out_shape[1], out_channels, n_groups, n_attributes, fine_tune)
+    
+BioNet = BioNet_M
