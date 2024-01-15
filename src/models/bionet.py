@@ -112,7 +112,7 @@ class BioNet_M(nn.Module):
 
         self.cfc = CFC(in_channels, in_channels, n_attributes)
 
-        self.group_face = GroupFace_M(in_channels, out_channels, groups= n_groups)
+        self.group_face = GroupFace_M(in_channels, out_channels, groups= n_groups, n_attributes=n_attributes)
 
         # self.age_branch = CORAL(in_features=out_channels, out_features=6)
         self.age_branch = nn.Sequential(
