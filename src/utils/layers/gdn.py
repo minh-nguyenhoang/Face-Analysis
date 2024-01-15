@@ -32,7 +32,7 @@ class FCL(nn.Module):
 
     def forward(self, x):
         x = self.fc(x)
-        return 
+        return x
 
 
 class GDN(nn.Module):
