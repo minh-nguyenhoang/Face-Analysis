@@ -60,7 +60,7 @@ class GroupFace_M(nn.Module):
     def forward(self, x: Iterable[torch.Tensor]):
         instacne_representation = [module(x_) for x_, module in zip(x,self.instance_fc)] 
 
-        mixed_x = self.mixer(torch.cat(x, dim= -1))
+        mixed_x = self.mixer(torch.cat(list(x), dim= -1))
 
         # GDN
         group_inter, group_prob = self.gdn(torch.cat(instacne_representation,dim= -1))
