@@ -6,7 +6,7 @@ Pytorch implementation of GroupFace: https://arxiv.org/abs/2005.10497
 import torch
 import torch.nn as nn
 from .frelu import FReLU
-from .gdn import GDN, FC, CDN
+from .gdn import GDN, FC, CDN, FCL
 from typing import Iterable
 
 
@@ -15,9 +15,9 @@ class GroupFace_S(nn.Module):
         super(GroupFace_S, self).__init__()
         self.mode = mode
         self.groups = groups
-        self.instance_fc = FC(in_channels, out_channels)
+        self.instance_fc = FCL(in_channels, out_channels)
         self.gdn = GDN(out_channels, groups)
-        self.group_fc = nn.ModuleList([FC(in_channels, out_channels) for i in range(groups)])
+        self.group_fc = nn.ModuleList([FCL(in_channels, out_channels) for i in range(groups)])
         
         self.out_channels = out_channels
 
@@ -45,11 +45,11 @@ class GroupFace_M(nn.Module):
         super(GroupFace_M, self).__init__()
         self.mode = mode
         self.groups = groups
-        self.instance_fc = nn.ModuleList(FC(in_channels, out_channels) for i in range(n_attributes))
+        self.instance_fc = nn.ModuleList(FCL(in_channels, out_channels) for i in range(n_attributes))
         self.mixer = nn.Linear(in_channels*n_attributes, in_channels)
         self.gdn = GDN(out_channels*n_attributes, groups)
 
-        self.group_fc = nn.ModuleList(FC(in_channels, out_channels) for i in range(groups))
+        self.group_fc = nn.ModuleList(FCL(in_channels, out_channels) for i in range(groups))
         
         self.out_channels = out_channels
         self.n_attributes = n_attributes

@@ -11,19 +11,34 @@ class FC(nn.Module):
     def __init__(self, inplanes, outplanes):
         super(FC, self).__init__()
         self.fc = nn.Linear(inplanes, outplanes)
-        self.act = nn.PReLU()
+        self.act = nn.ReLU()
         # self.act = nn.ReLU()
 
     def forward(self, x):
         x = self.fc(x)
         return self.act(x)
 
+class FCL(nn.Module):
+    def __init__(self, inplanes, outplanes):
+        super(FC, self).__init__()
+        self.fc = nn.Sequential(
+            nn.Linear(inplanes, inplanes//2),
+            nn.ReLU(inplace= True),
+            nn.Linear(inplanes//2, inplanes//4),
+            nn.ReLU(inplace= True),
+            nn.Linear(inplanes//4, outplanes)
+        )
+        # self.act = nn.ReLU()
+
+    def forward(self, x):
+        x = self.fc(x)
+        return 
 
 
 class GDN(nn.Module):
     def __init__(self, inplanes, outplanes, intermediate_dim=256):
         super(GDN, self).__init__()
-        self.fc1 = FC(inplanes, intermediate_dim)
+        self.fc1 = FCL(inplanes, intermediate_dim)
         self.fc2 = nn.Linear(intermediate_dim, outplanes)
         self.softmax = nn.Softmax()
 
@@ -37,7 +52,7 @@ class GDN(nn.Module):
 class CDN(nn.Module):
     def __init__(self, inplanes, outplanes, intermediate_dim=256):
         super(CDN, self).__init__()
-        self.fc1 = FC(inplanes, intermediate_dim)
+        self.fc1 = FCL(inplanes, intermediate_dim)
         self.fc2 = nn.Linear(intermediate_dim, outplanes)
         self.softmax = nn.Softmax()
 

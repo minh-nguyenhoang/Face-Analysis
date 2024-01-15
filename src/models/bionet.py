@@ -27,34 +27,58 @@ class BioNet_S(nn.Module):
 
         # self.age_branch = CORAL(in_features=out_channels, out_features=6)
         self.age_branch = nn.Sequential(
-            nn.Linear(out_channels, 512),
+            nn.Linear(out_channels, 256),
             nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
             nn.Linear(512, 6)
         )
 
         self.race_branch = nn.Sequential(
-            nn.Linear(out_channels, 512),
+            nn.Linear(out_channels, 256),
             nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
             nn.Linear(512, 3)
         )
         self.gender_branch = nn.Sequential(
-            nn.Linear(out_channels, 512),
+            nn.Linear(out_channels, 256),
             nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
             nn.Linear(512, 1)
         )
         self.masked_branch = nn.Sequential(
-            nn.Linear(out_channels, 512),
+            nn.Linear(out_channels, 256),
             nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
             nn.Linear(512, 1)
         )
         self.emotion_branch = nn.Sequential(
-            nn.Linear(out_channels, 512),
+            nn.Linear(out_channels, 256),
             nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
             nn.Linear(512, 7)
         )
         self.skintone_branch = nn.Sequential(
-            nn.Linear(out_channels, 512),
+            nn.Linear(out_channels, 256),
             nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
             nn.Linear(512, 4)
         )
 
