@@ -47,9 +47,9 @@ class GroupFace_M(nn.Module):
         self.groups = groups
         self.instance_fc = nn.ModuleList(FC(in_channels, out_channels) for i in range(n_attributes))
         self.mixer = nn.Linear(in_channels*n_attributes, in_channels)
-        self.gdn = GDN(out_channels, groups)
+        self.gdn = GDN(out_channels*n_attributes, groups)
 
-        self.group_fc = nn.ModuleList(FC(out_channels*n_attributes, out_channels) for i in range(groups))
+        self.group_fc = nn.ModuleList(FC(in_channels, out_channels) for i in range(groups))
         
         self.out_channels = out_channels
         self.n_attributes = n_attributes
