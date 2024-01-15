@@ -191,15 +191,15 @@ def main():
         image_id.extend(position_)
         file_names.extend(file_path_)
         # (0.485, 0.456, 0.406), (0.229, 0.224, 0.225)
-        images_ = torch.tensor(
+        images_model = torch.tensor(
             np.array([cv2.cvtColor(letterbox(image[int(corner[1]):int(corner[3]), int(corner[0]): int(corner[2])].cpu().numpy(), (224,224)), cv2.COLOR_RGB2BGR) for image, corner in zip(images_, corners)])
             ).to(device)
-        images_ = images_.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
-        for image, corner in zip(images_, corners):
-            print(int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))), 
-                      int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
-                      int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))),
-                      int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0])))))
+        images_model = images_model.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
+        # for image, corner in zip(images_, corners):
+        #     print(int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))), 
+        #               int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
+        #               int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))),
+        #               int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0])))))
         image_emo = torch.tensor(
             np.array([cv2.cvtColor(cv2.resize(
                 image[int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
@@ -207,10 +207,10 @@ def main():
                       int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
                       int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)), cv2.COLOR_RGB2BGR) for image, corner in zip(images_, corners)])
             ).to(device)
-        image_emo = images_.mul(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device)).add(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device))
+        image_emo = image_emo.permute(0,3,1,2).div(255.0)
 
 
-        age, race, gender, mask, emotion, skintone = model(images_)
+        age, race, gender, mask, emotion, skintone = model(images_model)
         true_emo = emo_model(image_emo)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
