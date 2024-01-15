@@ -48,4 +48,9 @@ class multi_task_loss(nn.Module):
             loss_group = self.group_loss(group_prob)
         else:
             loss_group = 0.
+
+        if torch.isnan(loss_age + loss_gender + loss_masked + loss_emo + loss_race + loss_skin + loss_group):
+            print(f"loss_age: {loss_age:.4f}, loss_gender: {loss_gender:.4f}, loss_masked: {loss_masked:.4f}, loss_emo: {loss_emo:.4f}, loss_race: {loss_race:.4f}, loss_skin: {loss_skin:.4f}, loss_group: {loss_group:.4f}") 
+
+
         return loss_age + loss_gender + loss_masked + loss_emo + loss_race + loss_skin + loss_group
