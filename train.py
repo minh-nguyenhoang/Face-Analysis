@@ -21,6 +21,7 @@ def loss_batch(model, loss_func, xb, age, gender, masked, emotion, race, skin, o
     if opt is not None:
         # Compute gradients
         loss.backward()
+        torch.nn.utils.clip_grad.clip_grad_norm(model.parameters(), max_norm= 5)
         # Update parameters
         opt.step()
         # Reset gradients
