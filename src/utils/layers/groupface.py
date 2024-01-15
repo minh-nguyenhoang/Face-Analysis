@@ -30,7 +30,7 @@ class GroupFace_S(nn.Module):
         # group ensemble
         if self.mode == 'S':
             v_G = torch.stack([Gk(x) for Gk in self.group_fc], dim= 1)  # (B,n_groups,512)
-            group_ensembled = torch.mul(v_G, group_prob).sum(dim=1)
+            group_ensembled = torch.mul(v_G, group_prob.view(group_prob.shape[0], group_prob.shape[1], 1)).sum(dim=1)
         else:
             label = torch.argmax(group_prob, dim=1)
             group_ensembled = self.group_fc[label](x)    
