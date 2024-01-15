@@ -82,6 +82,8 @@ class BioNet(nn.Module):
             nn.Linear(128, 4)
         )
 
+        self.skin_weights = nn.parameter(torch.Tensor(0.5))
+
     def forward(self, x):
         feat = self.vcn(x)
 
@@ -92,7 +94,7 @@ class BioNet(nn.Module):
         gender = self.gender_branch(attr['attr_2'])
         mask = self.masked_branch(attr['attr_3'])
         emotion = self.emotion_branch(attr['attr_4'])
-        skintone = self.skintone_branch(0.2*attr['attr_1'] + 0.8*attr['attr_5'])
+        skintone = self.skintone_branch(torch.sigmoid(self.skin_weights)*attr['attr_1'] + (1 - torch.sigmoid(self.skin_weights))*attr['attr_5'])
 
         return age, race, gender, mask, emotion, skintone
     
