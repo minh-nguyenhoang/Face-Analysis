@@ -82,7 +82,7 @@ class BioNet(nn.Module):
             nn.Linear(128, 4)
         )
 
-        self.skin_weights = nn.Parameter(torch.Tensor(0.5))
+        self.skin_weights = nn.Parameter(torch.tensor(0.5))
 
     def forward(self, x):
         feat = self.vcn(x)
