@@ -134,7 +134,7 @@ class RandomGammaCorrection(object):
         else:
             return TF.adjust_gamma(image, self.gamma, gain=1)
         
-def cutout(mask_size= 10, p= 0.3, cutout_inside= True, mask_color=(0, 0, 0)):
+def cutout(mask_size= 15, p= 0.3, cutout_inside= True, mask_color=(0, 0, 0)):
     mask_size_half = mask_size // 2
     offset = 1 if mask_size % 2 == 0 else 0
 
