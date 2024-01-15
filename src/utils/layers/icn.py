@@ -52,7 +52,7 @@ class CFC(nn.Module):
         self.out_channels = out_channels
         self.n_attributes = n_attributes
 
-        self.identity_comp = CFCComponent(in_channels, out_channels, is_identity= True)
+        self.identity_comp = CFCComponent(in_channels, out_channels, is_identity= False)
         self.attribute_comps = nn.ModuleDict({
             f'attr_{i}': CFCComponent(in_channels, out_channels, is_identity= False) for i in range(n_attributes)
         })
