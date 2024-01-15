@@ -119,6 +119,7 @@ if __name__ == "__main__":
   if args.path != "None":
     try:
         model.load_state_dict(torch.load(f'/kaggle/input/baseline-checkpoint/{args.path}'))
+         # model.load_state_dict(torch.load(f'{args.path}'))
     except:
         model.load_state_dict(torch.load(f'{args.path}'))
 #   for x, _, _, _, _, _, _ in train_dl:
