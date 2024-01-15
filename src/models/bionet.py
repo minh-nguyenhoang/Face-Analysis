@@ -65,7 +65,7 @@ class BioNet_S(nn.Module):
 
         add_attr, _, group_prob = self.group_face(id)
 
-        _, contribution = self.contribution_net(feat)
+        _, contribution = self.contribution_net(add_attr)
         contribution = torch.split(contribution, 1, dim= -1)
 
         age = self.age_branch(attr['attr_0'] + contribution[0]*add_attr)
