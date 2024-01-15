@@ -61,9 +61,9 @@ class BioNet_S(nn.Module):
     def forward(self, x):
         feat = self.vcn(x)
 
-        _, attr = self.cfc(feat)
+        id, attr = self.cfc(feat)
 
-        add_attr, _, group_prob = self.group_face(_)
+        add_attr, _, group_prob = self.group_face(id)
 
         _, contribution = self.contribution_net(feat)
         contribution = torch.split(contribution, 1, dim= -1)
