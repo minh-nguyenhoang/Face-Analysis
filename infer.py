@@ -124,7 +124,7 @@ def main():
         model.load_state_dict(torch.load(f'{args.fname}', map_location= 'cpu'))
 
     model = model.to(face_detector.device)
-    emo_model = RMN(False).emo_model.to(face_detector.device)
+    # emo_model = RMN(False).emo_model.to(face_detector.device)
     
     model.eval()
 
@@ -200,18 +200,18 @@ def main():
         #               int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
         #               int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))),
         #               int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0])))))
-        image_emo = torch.tensor(
-            np.array([cv2.resize(
-                image[int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
-                      int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
-                      int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
-                      int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)) for image, corner in zip(images_, corners)])
-            ).to(device)
-        image_emo = image_emo.permute(0,3,1,2).div(255.0)
+        # image_emo = torch.tensor(
+        #     np.array([cv2.resize(
+        #         image[int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
+        #               int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
+        #               int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
+        #               int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)) for image, corner in zip(images_, corners)])
+        #     ).to(device)
+        # image_emo = image_emo.permute(0,3,1,2).div(255.0)
 
 
         age, race, gender, mask, emotion, skintone = model(images_model)
-        true_emo = emo_model(image_emo)
+        # true_emo = emo_model(image_emo)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         age = torch.argmax(age, dim = 1)
@@ -221,7 +221,7 @@ def main():
         mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = 1).int()
 
         emotion = torch.argmax(emotion, dim = 1)
-        true_emo = torch.argmax(true_emo, dim = 1)
+        # true_emo = torch.argmax(true_emo, dim = 1)
 
         skintone = torch.argmax(skintone, dim = 1)
 
@@ -230,7 +230,7 @@ def main():
         gender_pred = [LabelMapping.get('gender_map_rev').get(a, None) for a in gender.cpu().tolist()]
         mask_pred = [LabelMapping.get('masked_map_rev').get(a, None) for a in mask.cpu().tolist()]
         emotion_pred = [LabelMapping.get('emotion_map_rev').get(a, None) for a in emotion.cpu().tolist()]
-        true_emo_pred = [FER_2013_EMO_DICT.get(a, None) for a in true_emo.cpu().tolist()] 
+        # true_emo_pred = [FER_2013_EMO_DICT.get(a, None) for a in true_emo.cpu().tolist()] 
 
         skintone_pred = [LabelMapping.get('skintone_map_rev').get(a, None) for a in skintone.cpu().tolist()]
 
@@ -238,7 +238,7 @@ def main():
         races.extend(race_pred)
         genders.extend(gender_pred)
         masks.extend(mask_pred)
-        emotions.extend(true_emo_pred)
+        emotions.extend(emotion_pred)
         skintones.extend(skintone_pred)
 
     
