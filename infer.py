@@ -4,7 +4,7 @@ import torch.nn as nn
 import torchvision.models._utils as _utils
 import torchvision.models as models
 import torch.nn.functional as F
-from rmn import RMN
+# from rmn import RMN
 
 import torchvision.models.detection.backbone_utils as backbone_utils
 from collections import OrderedDict
