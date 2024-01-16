@@ -34,11 +34,24 @@ class multi_task_loss(nn.Module):
 
     
     def forward(self, x, age, gender, masked, emotion, race, skin):
-        age_pred, race_pred, gender_pred, mask_pred, emotion_pred, skintone_pred = x
+        if len(x) == 6:
+            age_pred, race_pred, gender_pred, mask_pred, emotion_pred, skintone_pred = x
+        else:
+            age_pred, race_pred, gender_pred, mask_pred, emotion_pred, skintone_pred, age_pred_, race_pred_, gender_pred_, mask_pred_, emotion_pred_, skintone_pred_ = x
         loss_age = self.age_loss(age_pred, age)
         loss_gender = self.gender_loss(gender_pred, gender.unsqueeze(1).float())
         loss_masked = self.masked_loss(mask_pred, masked.unsqueeze(1).float())
         loss_race = self.race_loss(race_pred, race)
         loss_skin = self.skin_loss(skintone_pred, skin)
         loss_emo = self.emo_loss(emotion_pred, emotion)
+
+        if len(x) != 6:
+            loss_age_ = self.age_loss(age_pred_, age)
+            loss_gender_ = self.gender_loss(gender_pred_, gender.unsqueeze(1).float())
+            loss_masked_ = self.masked_loss(mask_pred_, masked.unsqueeze(1).float())
+            loss_race_ = self.race_loss(race_pred_, race)
+            loss_skin_ = self.skin_loss(skintone_pred_, skin)
+            loss_emo_ = self.emo_loss(emotion_pred_, emotion)
+
+            return (loss_age + loss_gender + loss_masked + loss_emo + loss_race + loss_skin) * 0.7 + (loss_age_ + loss_gender_ + loss_masked_ + loss_emo_ + loss_race_ + loss_skin_) *0.3
         return loss_age + loss_gender + loss_masked + loss_emo + loss_race + loss_skin

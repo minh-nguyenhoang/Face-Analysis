@@ -123,8 +123,8 @@ class Transformer(nn.Module):
         return self.norm(x)
 
     
-class ViT_Dung(nn.Module):
-    def __init__(self, *, num_patches, dim, depth, heads, mlp_dim, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0.):
+class ViT_Minh(nn.Module):
+    def __init__(self, *, num_patches, dim, depth, heads, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0.):
         super().__init__()
         
         self.num_patches = num_patches
@@ -135,75 +135,16 @@ class ViT_Dung(nn.Module):
 
         self.dropout = nn.Dropout(emb_dropout)
 
-        self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout)
+        self.transformer = Transformer(dim, depth, heads, dim_head, dim//2, dropout)
 
         self.pool = pool
-        self.mlp_head = nn.Linear(dim, mlp_dim)
+        self.mlp_head = nn.Identity()
 
-        self.age_branch = nn.Sequential(
-            nn.Linear(mlp_dim, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 6)
-        )
 
-        self.race_branch = nn.Sequential(
-            nn.Linear(mlp_dim, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 3)
-        )
-
-        self.gender_branch = nn.Sequential(
-            nn.Linear(mlp_dim, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 1)
-        )
-        
-        self.masked_branch = nn.Sequential(
-            nn.Linear(mlp_dim, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 1)
-        )
-
-        self.emotion_branch = nn.Sequential(
-            nn.Linear(mlp_dim, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 7)
-        )
-
-        self.skintone_branch = nn.Sequential(
-            nn.Linear(mlp_dim, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 4)
-        )
-
-    def forward(self, x):
+    def forward(self, x, cls_tokens):
         b, n, _ = x.shape
 
-        cls_tokens = repeat(self.cls_token, '1 c d -> b c d', b = b)
+
         x = torch.cat((cls_tokens, x), dim=1)
         x += self.pos_embedding[:, :(n + 6)]
         x = self.dropout(x)
@@ -216,11 +157,11 @@ class ViT_Dung(nn.Module):
 
         age_head, race_head, gender_head, mask_head, emotion_head, skintone_head = torch.split(x, 1, 1)
 
-        age = self.age_branch(age_head.squeeze(1))
-        race = self.race_branch(race_head.squeeze(1))
-        gender = self.gender_branch(gender_head.squeeze(1))
-        mask = self.masked_branch(mask_head.squeeze(1))
-        emotion = self.emotion_branch(emotion_head.squeeze(1))
-        skintone = self.skintone_branch(skintone_head.squeeze(1))
+        # age = self.age_branch(age_head.squeeze(1))
+        # race = self.race_branch(race_head.squeeze(1))
+        # gender = self.gender_branch(gender_head.squeeze(1))
+        # mask = self.masked_branch(mask_head.squeeze(1))
+        # emotion = self.emotion_branch(emotion_head.squeeze(1))
+        # skintone = self.skintone_branch(skintone_head.squeeze(1))
         
-        return age, race, gender, mask, emotion, skintone
+        return age_head.squeeze(1), race_head.squeeze(1), gender_head.squeeze(1), mask_head.squeeze(1), emotion_head.squeeze(1), skintone_head.squeeze(1)
