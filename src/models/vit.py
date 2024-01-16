@@ -140,7 +140,7 @@ class ViT_Dung(nn.Module):
         self.transformer = Transformer(dim, depth, heads, dim_head, mlp_dim, dropout)
 
         self.pool = pool
-        self.to_latent = nn.Identity()
+        self.mlp_head = nn.Linear(dim, mlp_dim)
 
         self.age_branch = nn.Sequential(
             nn.Linear(mlp_dim, 256),
@@ -213,6 +213,8 @@ class ViT_Dung(nn.Module):
         x = self.transformer(x)
 
         x = x.mean(dim = 1) if self.pool == 'mean' else x[:, :6]
+        
+        x = self.mlp_head(x)
 
         age_head, race_head, gender_head, mask_head, emotion_head, skintone_head = torch.split(x, 1, 1)
 
