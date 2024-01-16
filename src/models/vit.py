@@ -205,7 +205,7 @@ class ViT_Dung(nn.Module):
     def forward(self, x):
         b, n, _ = x.shape
 
-        cls_tokens = repeat(self.cls_token, '1 6 d -> b 6 d', b = b)
+        cls_tokens = repeat(self.cls_token, '1 c d -> b c d', b = b)
         x = torch.cat((cls_tokens, x), dim=1)
         x += self.pos_embedding[:, :(n + 6)]
         x = self.dropout(x)
