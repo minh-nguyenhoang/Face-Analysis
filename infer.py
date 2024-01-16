@@ -4,6 +4,7 @@ import torch.nn as nn
 import torchvision.models._utils as _utils
 import torchvision.models as models
 import torch.nn.functional as F
+import keras
 # from rmn import RMN
 
 import torchvision.models.detection.backbone_utils as backbone_utils
@@ -125,6 +126,7 @@ def main():
 
     model = model.to(face_detector.device)
     # emo_model = RMN(False).emo_model.to(face_detector.device)
+    emo_model = keras.models.load_model('rafdb.keras')
     
     model.eval()
 
@@ -207,11 +209,13 @@ def main():
         #               int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
         #               int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)) for image, corner in zip(images_, corners)])
         #     ).to(device)
-        # image_emo = image_emo.permute(0,3,1,2).div(255.0)
+        # image_emo = image_emo.div(255.0).numpy
+
+        image_emo = images_model.permute(0,2,3,1).numpy()
 
 
         age, race, gender, mask, emotion, skintone = model(images_model)
-        # true_emo = emo_model(image_emo)
+        true_emo = emo_model(image_emo)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         age = torch.argmax(age, dim = 1)
