@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
   loss_func = multi_task_loss(device=device)
 
-  model = BioNet(backbone, 1024, 512, fine_tune=args.finetune)
+  model = BioNet(backbone, 1024, 512, n_groups= 32, fine_tune=args.finetune)
   model.to(device)
   if args.path != "None":
     try:
