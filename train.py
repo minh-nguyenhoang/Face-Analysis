@@ -160,7 +160,7 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
     if opt_fn is None:
         opt_fn = torch.optim.Adam
     opt = opt_fn(model.parameters(),lr=lr,weight_decay=1e-4)
-    sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=opt, mode='min', patience= 8, min_lr =1e-4, verbose=True)
+    sched = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=opt, mode='min', patience= 8, factor= 0.25, min_lr =1e-6, verbose=True)
 
     for epoch in range(epochs):
         avg_loss = []

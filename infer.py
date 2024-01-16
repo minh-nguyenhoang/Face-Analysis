@@ -238,7 +238,7 @@ def main():
         races.extend(race_pred)
         genders.extend(gender_pred)
         masks.extend(mask_pred)
-        emotions.extend(true_emo_pred)
+        emotions.extend(emotion_pred)
         skintones.extend(skintone_pred)
 
     
