@@ -4,7 +4,7 @@ import torch.nn as nn
 import torchvision.models._utils as _utils
 import torchvision.models as models
 import torch.nn.functional as F
-from rmn import RMN
+# from rmn import RMN
 
 import torchvision.models.detection.backbone_utils as backbone_utils
 from collections import OrderedDict
@@ -124,7 +124,7 @@ def main():
         model.load_state_dict(torch.load(f'{args.fname}', map_location= 'cpu'))
 
     model = model.to(face_detector.device)
-    emo_model = RMN(False).emo_model.to(face_detector.device)
+    # emo_model = RMN(False).emo_model.to(face_detector.device)
     
     model.eval()
 
@@ -200,18 +200,18 @@ def main():
         #               int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
         #               int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))),
         #               int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0])))))
-        image_emo = torch.tensor(
-            np.array([cv2.resize(
-                image[int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
-                      int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
-                      int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
-                      int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)) for image, corner in zip(images_, corners)])
-            ).to(device)
-        image_emo = image_emo.permute(0,3,1,2).div(255.0)
+        # image_emo = torch.tensor(
+        #     np.array([cv2.resize(
+        #         image[int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
+        #               int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
+        #               int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
+        #               int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)) for image, corner in zip(images_, corners)])
+        #     ).to(device)
+        # image_emo = image_emo.permute(0,3,1,2).div(255.0)
 
 
         age, race, gender, mask, emotion, skintone = model(images_model)
-        true_emo = emo_model(image_emo)
+        # true_emo = emo_model(image_emo)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         age = torch.argmax(age, dim = 1)
