@@ -221,7 +221,7 @@ def main():
         mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = 1).int()
 
         emotion = torch.argmax(emotion, dim = 1)
-        true_emo = torch.argmax(true_emo, dim = 1)
+        # true_emo = torch.argmax(true_emo, dim = 1)
 
         skintone = torch.argmax(skintone, dim = 1)
 
@@ -230,7 +230,7 @@ def main():
         gender_pred = [LabelMapping.get('gender_map_rev').get(a, None) for a in gender.cpu().tolist()]
         mask_pred = [LabelMapping.get('masked_map_rev').get(a, None) for a in mask.cpu().tolist()]
         emotion_pred = [LabelMapping.get('emotion_map_rev').get(a, None) for a in emotion.cpu().tolist()]
-        true_emo_pred = [FER_2013_EMO_DICT.get(a, None) for a in true_emo.cpu().tolist()] 
+        # true_emo_pred = [FER_2013_EMO_DICT.get(a, None) for a in true_emo.cpu().tolist()] 
 
         skintone_pred = [LabelMapping.get('skintone_map_rev').get(a, None) for a in skintone.cpu().tolist()]
 
