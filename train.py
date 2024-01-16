@@ -130,7 +130,7 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
 
 
 def accuracy(outputs, age, gender, masked, emotion, race, skin, eval):
-    if len(x) == 6:
+    if len(outputs) == 6:
         out_age, out_race, out_gender, out_masked, out_emotion, out_skin = outputs
     else:
         out_age, out_race, out_gender, out_masked, out_emotion, out_skin,_,_,_,_,_,_ = outputs
