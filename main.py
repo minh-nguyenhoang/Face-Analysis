@@ -110,7 +110,7 @@ if __name__ == "__main__":
 # #   print(backbone)
   backbone.head = nn.Identity()
 
-#   backbone = iresnet100(pretrained= True, num_features = 1024,)
+
 
   loss_func = multi_task_loss(device=device)
 

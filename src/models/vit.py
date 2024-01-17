@@ -11,6 +11,14 @@ def pair(t):
 
 # classes
 
+class PreNorm(nn.Module):
+    def __init__(self, dim, fn):
+        super().__init__()
+        self.norm = nn.LayerNorm(dim)
+        self.fn = fn
+    def forward(self, x, **kwargs):
+        return self.fn(self.norm(x), **kwargs)
+
 class FeedForward(nn.Module):
     def __init__(self, dim, hidden_dim, dropout = 0.):
         super().__init__()
@@ -122,6 +130,56 @@ class Transformer(nn.Module):
 
         return self.norm(x)
 
+class MultiScaleTransformerEncoder(nn.Module):
+
+    def __init__(self, small_dim = 96, small_depth = 4, small_heads =3, small_dim_head = 32, small_mlp_dim = 384,
+                 large_dim = 192, large_depth = 1, large_heads = 3, large_dim_head = 64, large_mlp_dim = 768,
+                 cross_attn_depth = 1, cross_attn_heads = 3, dropout = 0.):
+        super().__init__()
+        self.transformer_enc_small = Transformer(small_dim, small_depth, small_heads, small_dim_head, small_mlp_dim)
+        self.transformer_enc_large = Transformer(large_dim, large_depth, large_heads, large_dim_head, large_mlp_dim)
+
+        self.cross_attn_layers = nn.ModuleList([])
+        for _ in range(cross_attn_depth):
+            self.cross_attn_layers.append(nn.ModuleList([
+                nn.Linear(small_dim, large_dim),
+                nn.Linear(large_dim, small_dim),
+                PreNorm(large_dim, CrossAttention(large_dim, heads = cross_attn_heads, dim_head = large_dim_head, dropout = dropout)),
+                nn.Linear(large_dim, small_dim),
+                nn.Linear(small_dim, large_dim),
+                PreNorm(small_dim, CrossAttention(small_dim, heads = cross_attn_heads, dim_head = small_dim_head, dropout = dropout)),
+            ]))
+
+    def forward(self, xs, xl):
+
+        xs = self.transformer_enc_small(xs)
+        xl = self.transformer_enc_large(xl)
+
+        for f_sl, g_ls, cross_attn_s, f_ls, g_sl, cross_attn_l in self.cross_attn_layers:
+            small_class = xs[:, 0]
+            x_small = xs[:, 1:]
+            large_class = xl[:, 0]
+            x_large = xl[:, 1:]
+
+            # Cross Attn for Large Patch
+
+            cal_q = f_ls(large_class.unsqueeze(1))
+            cal_qkv = torch.cat((cal_q, x_small), dim=1)
+            cal_out = cal_q + cross_attn_l(cal_qkv)
+            cal_out = g_sl(cal_out)
+            xl = torch.cat((cal_out, x_large), dim=1)
+
+            # Cross Attn for Smaller Patch
+            cal_q = f_sl(small_class.unsqueeze(1))
+            cal_qkv = torch.cat((cal_q, x_large), dim=1)
+            cal_out = cal_q + cross_attn_s(cal_qkv)
+            cal_out = g_ls(cal_out)
+            xs = torch.cat((cal_out, x_small), dim=1)
+
+        return xs, xl
+
+
+
     
 class ViT_Minh(nn.Module):
     def __init__(self, *, num_patches, dim, depth, heads, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0.):
@@ -141,11 +199,14 @@ class ViT_Minh(nn.Module):
         self.mlp_head = nn.Identity()
 
 
-    def forward(self, x, cls_tokens):
+    def forward(self, x, cls_tokens = None):
         b, n, _ = x.shape
 
         cls_tokens_ = repeat(self.cls_token, '1 c d -> b c d', b = b)
-        x = torch.cat((cls_tokens + cls_tokens_, x), dim=1)
+        if cls_tokens is not None:
+            x = torch.cat((cls_tokens + cls_tokens_, x), dim=1)
+        else:
+            x = torch.cat((cls_tokens_, x), dim=1)
         x += self.pos_embedding[:, :(n + 6)]
         x = self.dropout(x)
 
@@ -165,3 +226,97 @@ class ViT_Minh(nn.Module):
         # skintone = self.skintone_branch(skintone_head.squeeze(1))
         
         return age_head.squeeze(1), race_head.squeeze(1), gender_head.squeeze(1), mask_head.squeeze(1), emotion_head.squeeze(1), skintone_head.squeeze(1)
+    
+
+'''
+CrossViT not fixed yet, just copy and paste implementation from Github.
+'''
+
+
+class CrossViT(nn.Module):
+    def __init__(self, image_size, channels, num_classes, patch_size_small = 14, patch_size_large = 16, small_dim = 96,
+                 large_dim = 192, small_depth = 1, large_depth = 4, cross_attn_depth = 1, multi_scale_enc_depth = 3,
+                 heads = 3, pool = 'cls', dropout = 0., emb_dropout = 0., scale_dim = 4):
+        super().__init__()
+
+        assert image_size % patch_size_small == 0, 'Image dimensions must be divisible by the patch size.'
+        num_patches_small = (image_size // patch_size_small) ** 2
+        patch_dim_small = channels * patch_size_small ** 2
+
+        assert image_size % patch_size_large == 0, 'Image dimensions must be divisible by the patch size.'
+        num_patches_large = (image_size // patch_size_large) ** 2
+        patch_dim_large = channels * patch_size_large ** 2
+        assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
+
+
+        self.to_patch_embedding_small = nn.Sequential(
+            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = patch_size_small, p2 = patch_size_small),
+            nn.Linear(patch_dim_small, small_dim),
+        )
+
+        self.to_patch_embedding_large = nn.Sequential(
+            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=patch_size_large, p2=patch_size_large),
+            nn.Linear(patch_dim_large, large_dim),
+        )
+
+        self.pos_embedding_small = nn.Parameter(torch.randn(1, num_patches_small + 1, small_dim))
+        self.cls_token_small = nn.Parameter(torch.randn(1, 1, small_dim))
+        self.dropout_small = nn.Dropout(emb_dropout)
+
+        self.pos_embedding_large = nn.Parameter(torch.randn(1, num_patches_large + 1, large_dim))
+        self.cls_token_large = nn.Parameter(torch.randn(1, 1, large_dim))
+        self.dropout_large = nn.Dropout(emb_dropout)
+
+        self.multi_scale_transformers = nn.ModuleList([])
+        for _ in range(multi_scale_enc_depth):
+            self.multi_scale_transformers.append(MultiScaleTransformerEncoder(small_dim=small_dim, small_depth=small_depth,
+                                                                              small_heads=heads, small_dim_head=small_dim//heads,
+                                                                              small_mlp_dim=small_dim*scale_dim,
+                                                                              large_dim=large_dim, large_depth=large_depth,
+                                                                              large_heads=heads, large_dim_head=large_dim//heads,
+                                                                              large_mlp_dim=large_dim*scale_dim,
+                                                                              cross_attn_depth=cross_attn_depth, cross_attn_heads=heads,
+                                                                              dropout=dropout))
+
+        self.pool = pool
+        self.to_latent = nn.Identity()
+
+        self.mlp_head_small = nn.Sequential(
+            nn.LayerNorm(small_dim),
+            nn.Linear(small_dim, num_classes)
+        )
+
+        self.mlp_head_large = nn.Sequential(
+            nn.LayerNorm(large_dim),
+            nn.Linear(large_dim, num_classes)
+        )
+
+
+    def forward(self, img):
+
+        xs = self.to_patch_embedding_small(img)
+        b, n, _ = xs.shape
+
+        cls_token_small = repeat(self.cls_token_small, '() n d -> b n d', b = b)
+        xs = torch.cat((cls_token_small, xs), dim=1)
+        xs += self.pos_embedding_small[:, :(n + 1)]
+        xs = self.dropout_small(xs)
+
+        xl = self.to_patch_embedding_large(img)
+        b, n, _ = xl.shape
+
+        cls_token_large = repeat(self.cls_token_large, '() n d -> b n d', b=b)
+        xl = torch.cat((cls_token_large, xl), dim=1)
+        xl += self.pos_embedding_large[:, :(n + 1)]
+        xl = self.dropout_large(xl)
+
+        for multi_scale_transformer in self.multi_scale_transformers:
+            xs, xl = multi_scale_transformer(xs, xl)
+        
+        xs = xs.mean(dim = 1) if self.pool == 'mean' else xs[:, 0]
+        xl = xl.mean(dim = 1) if self.pool == 'mean' else xl[:, 0]
+
+        xs = self.mlp_head_small(xs)
+        xl = self.mlp_head_large(xl)
+        x = xs + xl
+        return x

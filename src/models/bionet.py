@@ -86,7 +86,8 @@ class BioNet(nn.Module):
         )
 
     def forward(self, x):
-        feat = self.vcn(x)
+        feat= self.vcn(x)
+
 
         _, attr = self.cfc(feat)
 
