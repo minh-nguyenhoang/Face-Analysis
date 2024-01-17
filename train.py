@@ -174,7 +174,7 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
             avg_loss.append(train_loss)
             avg_train_metric.append(train_metric)
             pbar.set_postfix({'loss': train_loss,
-                          'acc': train_metric})
+                          'acc': train_metric.item()})
 
         # Evaluation
         mean_loss = torch.mean(torch.Tensor(avg_loss))
