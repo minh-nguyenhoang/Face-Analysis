@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from typing import Iterable, Optional
 import random
-
+import math
 '''
 https://github.com/kytimmylai/NoisyNN-PyTorch/tree/main implementation seem wrong as it only does linear transformation noise on 1 dimension(W instead of CxHxW)
 There should be two way to implement the random layer choosing:
@@ -41,14 +41,19 @@ def optimal_quality_matrix(k):
 def add_noise(name, chosen: Chosen):
     def hook(model: nn.Module, input, output: torch.Tensor):
         if name == chosen.name and model.training:
-            print(f'Layer {name} is chosen!')
-            # shape = output.shape
-            # output = output.reshape(shape[0],-1)
-            # k = torch.prod(torch.tensor(shape[1:]))
-            # linear_noise = optimal_quality_matrix(k).to(output.device)
-            # output = output@linear_noise
-            # output = output.view(*shape)
-
+            # print(f'Layer {name} is chosen!')
+            shape = output.shape
+            old_shape = None
+            if len(shape) == 3:
+                old_shape = shape
+                output = output.permute(0,2,1).view(shape[0],shape[2], math.sqrt(shape[1]), math.sqrt(shape[1]))
+                shape = output.shape
+            k = shape[-1]
+            linear_noise = optimal_quality_matrix(k).to(output.device)
+            output = output@linear_noise + output
+            output = output.view(*shape)
+            if old_shape is not None:
+                output = output.view(shape[0], shape[1], -1).permute(0,2,1)
         return output
     return hook
 
