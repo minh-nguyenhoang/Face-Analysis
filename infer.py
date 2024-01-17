@@ -26,17 +26,19 @@ from src.utils.label_mapping import LabelMapping
 import timm
 from tqdm.auto import tqdm
 from argparse import ArgumentParser
+from src.posterv2.PosterV2_7cls import load_pretrained_weights, pyramid_trans_expr2
 
 
 FER_2013_EMO_DICT = {
-    0: "Angry",
-    1: "Disgust",
-    2: "Fear",
-    3: "Happy",
-    4: "Sad",
-    5: "Surprise",
+    0: "Surprise",
+    1: "Fear",
+    2: "Disgust",
+    3: "Happiness",
+    4: "Sadness",
+    5: "Anger",
     6: "Neutral",
 }
+
 
 
 parser = ArgumentParser(
@@ -115,6 +117,13 @@ def main():
     backbone: nn.Module = timm.create_model('convnext_base.fb_in22k_ft_in1k', pretrained=False)
     backbone.head = nn.Identity()
 
+    posterv2 = pyramid_trans_expr2(img_size=224, num_classes=7)
+    checkpoint = torch.utils.model_zoo.load_url("https://github.com/minh-nguyenhoang/Face-Analysis/releases/download/backbone_emo/raf-db-model_best.pth")
+    best_acc = checkpoint['best_acc']
+    best_acc = best_acc.to()
+    print(f'best_acc:{best_acc}')
+    posterv2 = load_pretrained_weights(posterv2, checkpoint)
+    posterv2.eval()
     # backbone = iresnet100(pretrained= True, num_features = 1024,)
 
     model: BioNet = BioNet.from_inputs(backbone= backbone, out_channels= 512, n_attributes= 6, input_shape=(1,3,112,112))
@@ -200,18 +209,18 @@ def main():
         #               int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
         #               int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))),
         #               int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0])))))
-        # image_emo = torch.tensor(
-        #     np.array([cv2.resize(
-        #         image[int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
-        #               int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
-        #               int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
-        #               int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)) for image, corner in zip(images_, corners)])
-        #     ).to(device)
-        # image_emo = image_emo.permute(0,3,1,2).div(255.0)
+        image_emo = torch.tensor(
+            np.array([cv2.resize(
+                image[int(min(image.shape[0], max(0, corner[1] - 0.1*(corner[3]-corner[1])))): 
+                      int(min(image.shape[0], max(0, corner[3] + 0.1*(corner[3]-corner[1])))), 
+                      int(min(image.shape[1], max(0, corner[0] - 0.1*(corner[2]-corner[0])))):
+                      int(min(image.shape[1], max(0, corner[2] + 0.1*(corner[2]-corner[0]))))].cpu().numpy(), (224,224)) for image, corner in zip(images_, corners)])
+            ).to(device)
+        image_emo = image_emo.permute(0,3,1,2).div(255.0).sub(torch.tensor([0.485, 0.456, 0.406]).view(1,3,1,1).to(device)).div(torch.tensor([0.229, 0.224, 0.225]).view(1,3,1,1).to(device))
 
 
         age, race, gender, mask, emotion, skintone = model(images_model)
-        # true_emo = emo_model(image_emo)
+        true_emo = posterv2(image_emo)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         age = torch.argmax(age, dim = 1)
@@ -221,7 +230,7 @@ def main():
         mask = torch.squeeze(torch.sigmoid(mask)  > 0.5, dim = 1).int()
 
         emotion = torch.argmax(emotion, dim = 1)
-        # true_emo = torch.argmax(true_emo, dim = 1)
+        true_emo = torch.argmax(true_emo, dim = 1)
 
         skintone = torch.argmax(skintone, dim = 1)
 
@@ -230,7 +239,7 @@ def main():
         gender_pred = [LabelMapping.get('gender_map_rev').get(a, None) for a in gender.cpu().tolist()]
         mask_pred = [LabelMapping.get('masked_map_rev').get(a, None) for a in mask.cpu().tolist()]
         emotion_pred = [LabelMapping.get('emotion_map_rev').get(a, None) for a in emotion.cpu().tolist()]
-        # true_emo_pred = [FER_2013_EMO_DICT.get(a, None) for a in true_emo.cpu().tolist()] 
+        true_emo_pred = [FER_2013_EMO_DICT.get(a, None) for a in true_emo.cpu().tolist()] 
 
         skintone_pred = [LabelMapping.get('skintone_map_rev').get(a, None) for a in skintone.cpu().tolist()]
 
@@ -238,7 +247,7 @@ def main():
         races.extend(race_pred)
         genders.extend(gender_pred)
         masks.extend(mask_pred)
-        emotions.extend(emotion_pred)
+        emotions.extend(true_emo_pred)
         skintones.extend(skintone_pred)
 
     
