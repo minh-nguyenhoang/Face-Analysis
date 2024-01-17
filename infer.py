@@ -4,7 +4,6 @@ import torch.nn as nn
 import torchvision.models._utils as _utils
 import torchvision.models as models
 import torch.nn.functional as F
-import keras
 # from rmn import RMN
 
 import torchvision.models.detection.backbone_utils as backbone_utils
@@ -27,7 +26,7 @@ from src.utils.label_mapping import LabelMapping
 import timm
 from tqdm.auto import tqdm
 from argparse import ArgumentParser
-
+from src.utils.dirty.hack import inject_output_hack, remove_output_hack
 
 FER_2013_EMO_DICT = {
     0: "Angry",
@@ -126,7 +125,8 @@ def main():
 
     model = model.to(face_detector.device)
     # emo_model = RMN(False).emo_model.to(face_detector.device)
-    emo_model = keras.models.load_model('rafdb.keras')
+    inject_output_hack(model.vcn)
+    
     
     model.eval()
 
@@ -211,11 +211,9 @@ def main():
         #     ).to(device)
         # image_emo = image_emo.div(255.0).numpy
 
-        image_emo = images_model.permute(0,2,3,1).numpy()
-
 
         age, race, gender, mask, emotion, skintone = model(images_model)
-        true_emo = emo_model(image_emo)
+        # true_emo = emo_model(image_emo)
 
         # age: torch.Tensor = torch.sum(age.sigmoid() > 0.5, dim =1)
         age = torch.argmax(age, dim = 1)
@@ -262,6 +260,8 @@ def main():
     submission_file['age'].fillna('20-30s')
 
     submission_file.to_csv('answer.csv', sep= ',', index= False)
+
+    remove_output_hack(model.vcn)
 
 main()
 

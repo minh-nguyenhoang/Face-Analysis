@@ -11,11 +11,12 @@ from train import trainer, accuracy
 import logging
 import json
 from torch.utils.data import DataLoader
-from src.models.iresnet import iresnet100
 from src.utils.dataset import PixtaDataset
 from src.utils.loss import multi_task_loss
 import timm
 from tqdm import tqdm
+from src.utils.dirty.hack import inject_output_hack, remove_output_hack
+
 
 def checkpoint_filter_fn(state_dict, model):
     """ Remap FB checkpoints -> timm """
@@ -124,5 +125,6 @@ if __name__ == "__main__":
 #   for x, _, _, _, _, _, _ in train_dl:
 #     x = x.cuda()
 #     print(model(x))
-  
+  inject_output_hack(model.vcn)
   trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='', device=device)
+  remove_output_hack(model.vcn)

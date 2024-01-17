@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from ..utils.layers.icn import ICN, CFC
 from ..utils.layers import CORAL
 import timm
-from .vit import ViT_Minh
+from .vit import ViT_Minh, CrossViT
 
 # print(timm.list_models(pretrained=True))
 class BioNet(nn.Module):
@@ -20,104 +20,20 @@ class BioNet(nn.Module):
         self.vcn = backbone
         self.in_channels = in_channels
 
-        self.cfc = CFC(in_channels, in_channels, n_attributes= n_attributes)
 
         # num_patches, dim, depth, heads, mlp_dim, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0
-        self.vit_head = ViT_Minh(num_patches=7*7, dim=in_channels, depth=4, heads=8, pool='cls', dim_head=128, dropout=0., emb_dropout=0.2)
+        # self.vit_head = ViT_Minh(num_patches=7*7, dim=in_channels, depth=4, heads=8, pool='cls', dim_head=128, dropout=0., emb_dropout=0.2)
+        self.vit_head = CrossViT(out_channels, small_dim= 192, large_dim= 384, dropout=0., emb_dropout=0.)
 
-        self.age_branch = nn.Sequential(
-            nn.Linear(in_channels, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 6)
-        )
 
-        self.race_branch = nn.Sequential(
-            nn.Linear(in_channels, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 3)
-        )
-
-        self.gender_branch = nn.Sequential(
-            nn.Linear(in_channels, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 1)
-        )
-        
-        self.masked_branch = nn.Sequential(
-            nn.Linear(in_channels, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 1)
-        )
-
-        self.emotion_branch = nn.Sequential(
-            nn.Linear(in_channels, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 7)
-        )
-
-        self.skintone_branch = nn.Sequential(
-            nn.Linear(in_channels, 256),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(256, 128),
-            nn.ReLU(),
-            nn.Dropout(p=0.2),
-            nn.Linear(128, 4)
-        )
 
     def forward(self, x):
-        feat= self.vcn(x)
+        feat = list(self.vcn(x).values())
 
 
-        _, attr = self.cfc(feat)
+        age, race, gender, mask, emotion, skintone = self.vit_head(feat[0], feat[1])
 
-        attr = list(attr.values())
-        attr_ = torch.stack(attr, dim= 1)
-
-        b, c, h, w = feat.shape 
-        # print(feat.shape)
-        feat = feat.view(b, c, -1).permute(0,2,1)
-        age, race, gender, mask, emotion, skintone = self.vit_head(feat, attr_)
-
-        age = self.age_branch(age)
-        race = self.race_branch(race)
-        gender = self.gender_branch(gender)
-        mask = self.masked_branch(mask)
-        emotion = self.emotion_branch(emotion)
-        skintone = self.skintone_branch(skintone)
-
-        age_ = self.age_branch(attr[0])
-        race_ = self.race_branch(attr[1])
-        gender_ = self.gender_branch(attr[2])
-        mask_ = self.masked_branch(attr[3])
-        emotion_ = self.emotion_branch(attr[4])
-        skintone_ = self.skintone_branch(attr[5])
-
-
-        if self.training:
-            return age, race, gender, mask, emotion, skintone, age_, race_, gender_, mask_, emotion_, skintone_
-        else:
-            return age, race, gender, mask, emotion, skintone 
+        return age, race, gender, mask, emotion, skintone 
     
     @classmethod
     def from_inputs(cls, backbone: nn.Module, out_channels:int = 512, n_attributes:int = 4, inputs: torch.Tensor= None, input_shape: torch.Size=None, fine_tune=False):

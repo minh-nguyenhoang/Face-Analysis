@@ -234,37 +234,30 @@ CrossViT not fixed yet, just copy and paste implementation from Github.
 
 
 class CrossViT(nn.Module):
-    def __init__(self, image_size, channels, num_classes, patch_size_small = 14, patch_size_large = 16, small_dim = 96,
-                 large_dim = 192, small_depth = 1, large_depth = 4, cross_attn_depth = 1, multi_scale_enc_depth = 3,
+    def __init__(self, out_channels, small_dim = 192,
+                 large_dim = 384, small_depth = 2, large_depth = 3, cross_attn_depth = 1, multi_scale_enc_depth = 2,
                  heads = 3, pool = 'cls', dropout = 0., emb_dropout = 0., scale_dim = 4):
         super().__init__()
 
-        assert image_size % patch_size_small == 0, 'Image dimensions must be divisible by the patch size.'
-        num_patches_small = (image_size // patch_size_small) ** 2
-        patch_dim_small = channels * patch_size_small ** 2
-
-        assert image_size % patch_size_large == 0, 'Image dimensions must be divisible by the patch size.'
-        num_patches_large = (image_size // patch_size_large) ** 2
-        patch_dim_large = channels * patch_size_large ** 2
         assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'
 
 
         self.to_patch_embedding_small = nn.Sequential(
-            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = patch_size_small, p2 = patch_size_small),
-            nn.Linear(patch_dim_small, small_dim),
+            Rearrange('b c h w -> b (h w) c'),
+            nn.Linear(512, small_dim),
         )
 
         self.to_patch_embedding_large = nn.Sequential(
-            Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1=patch_size_large, p2=patch_size_large),
-            nn.Linear(patch_dim_large, large_dim),
+            Rearrange('b c h w -> b (h w) c'),
+            nn.Linear(1024, large_dim),
         )
 
-        self.pos_embedding_small = nn.Parameter(torch.randn(1, num_patches_small + 1, small_dim))
-        self.cls_token_small = nn.Parameter(torch.randn(1, 1, small_dim))
+        self.pos_embedding_small = nn.Parameter(torch.randn(1, 14*14 + 6, small_dim))
+        self.cls_token_small = nn.Parameter(torch.randn(1, 6, small_dim))
         self.dropout_small = nn.Dropout(emb_dropout)
 
-        self.pos_embedding_large = nn.Parameter(torch.randn(1, num_patches_large + 1, large_dim))
-        self.cls_token_large = nn.Parameter(torch.randn(1, 1, large_dim))
+        self.pos_embedding_large = nn.Parameter(torch.randn(1, 7*7 + 6, large_dim))
+        self.cls_token_large = nn.Parameter(torch.randn(1, 6, large_dim))
         self.dropout_large = nn.Dropout(emb_dropout)
 
         self.multi_scale_transformers = nn.ModuleList([])
@@ -283,18 +276,80 @@ class CrossViT(nn.Module):
 
         self.mlp_head_small = nn.Sequential(
             nn.LayerNorm(small_dim),
-            nn.Linear(small_dim, num_classes)
+            nn.Linear(small_dim, out_channels)
         )
 
         self.mlp_head_large = nn.Sequential(
             nn.LayerNorm(large_dim),
-            nn.Linear(large_dim, num_classes)
+            nn.Linear(large_dim, out_channels)
+        )
+
+        in_channels = out_channels
+
+        self.age_branch = nn.Sequential(
+            nn.Linear(in_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 6)
+        )
+
+        self.race_branch = nn.Sequential(
+            nn.Linear(in_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 3)
+        )
+
+        self.gender_branch = nn.Sequential(
+            nn.Linear(in_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 1)
+        )
+        
+        self.masked_branch = nn.Sequential(
+            nn.Linear(in_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 1)
+        )
+
+        self.emotion_branch = nn.Sequential(
+            nn.Linear(in_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 7)
+        )
+
+        self.skintone_branch = nn.Sequential(
+            nn.Linear(in_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 4)
         )
 
 
-    def forward(self, img):
+    def forward(self, small_feat, large_feat):
 
-        xs = self.to_patch_embedding_small(img)
+        xs = self.to_patch_embedding_small(small_feat)
         b, n, _ = xs.shape
 
         cls_token_small = repeat(self.cls_token_small, '() n d -> b n d', b = b)
@@ -302,7 +357,7 @@ class CrossViT(nn.Module):
         xs += self.pos_embedding_small[:, :(n + 1)]
         xs = self.dropout_small(xs)
 
-        xl = self.to_patch_embedding_large(img)
+        xl = self.to_patch_embedding_large(large_feat)
         b, n, _ = xl.shape
 
         cls_token_large = repeat(self.cls_token_large, '() n d -> b n d', b=b)
@@ -313,10 +368,19 @@ class CrossViT(nn.Module):
         for multi_scale_transformer in self.multi_scale_transformers:
             xs, xl = multi_scale_transformer(xs, xl)
         
-        xs = xs.mean(dim = 1) if self.pool == 'mean' else xs[:, 0]
-        xl = xl.mean(dim = 1) if self.pool == 'mean' else xl[:, 0]
+        xs = xs.mean(dim = 1) if self.pool == 'mean' else xs[:, :6]
+        xl = xl.mean(dim = 1) if self.pool == 'mean' else xl[:, :6]
 
         xs = self.mlp_head_small(xs)
         xl = self.mlp_head_large(xl)
         x = xs + xl
-        return x
+
+        age_head, race_head, gender_head, mask_head, emotion_head, skintone_head = torch.split(x, 1, 1)
+        age = self.age_branch(age_head.squeeze(1))
+        race = self.race_branch(race_head.squeeze(1))
+        gender = self.gender_branch(gender_head.squeeze(1))
+        mask = self.masked_branch(mask_head.squeeze(1))
+        emotion = self.emotion_branch(emotion_head.squeeze(1))
+        skintone = self.skintone_branch(skintone_head.squeeze(1))
+
+        return age, race, gender, mask, emotion, skintone
