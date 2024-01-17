@@ -124,6 +124,7 @@ def main():
     best_acc = best_acc.to()
     print(f'best_acc:{best_acc}')
     posterv2 = load_pretrained_weights(posterv2, checkpoint)
+    posterv2 = posterv2.to(face_detector.device)
     posterv2.eval()
     # backbone = iresnet100(pretrained= True, num_features = 1024,)
 
