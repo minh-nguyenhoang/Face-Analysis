@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.metrics import confusion_matrix, plot_confusion_matrix
+from sklearn.metrics import confusion_matrix
 
 labels = ['A', 'B', 'C', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']
 class RecorderMeter1(object):
@@ -52,7 +52,7 @@ class RecorderMeter1(object):
         plt.grid(True, which='minor', linestyle='-')
         plt.gcf().subplots_adjust(bottom=0.15)
 
-        plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
+        # plot_confusion_matrix(cm_normalized, title='Normalized confusion matrix')
         # show confusion matrix
         plt.savefig('./log/confusion_matrix.png', format='png')
         # fig.savefig(save_path, dpi=dpi, bbox_inches='tight')
