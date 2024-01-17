@@ -17,6 +17,9 @@ from src.utils.loss import multi_task_loss
 import timm
 from tqdm import tqdm
 
+from src.utils.dirty.hack import inject_output_hack, remove_output_hack
+from src.utils.dirty.noisynn import inject_noisy_nn, remove_noisy_nn
+
 def checkpoint_filter_fn(state_dict, model):
     """ Remap FB checkpoints -> timm """
     if 'head.norm.weight' in state_dict or 'norm_pre.weight' in state_dict:
@@ -115,6 +118,7 @@ if __name__ == "__main__":
   loss_func = multi_task_loss(device=device)
 
   model = BioNet(backbone, 1024, 512, fine_tune=args.finetune)
+  inject_noisy_nn(model.vcn)
   model.to(device)
   if args.path != "None":
     try:
