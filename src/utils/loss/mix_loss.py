@@ -53,5 +53,5 @@ class multi_task_loss(nn.Module):
             loss_skin_ = self.skin_loss(skintone_pred_, skin)
             loss_emo_ = self.emo_loss(emotion_pred_, emotion)
 
-            return (loss_age + loss_gender + loss_masked + loss_emo + loss_race + loss_skin) * 0.7 + (loss_age_ + loss_gender_ + loss_masked_ + loss_emo_ + loss_race_ + loss_skin_) *0.3
+            return (loss_age + loss_gender + loss_masked + loss_emo + loss_race + loss_skin) * 0.85 + (loss_age_ + loss_gender_ + loss_masked_ + loss_emo_ + loss_race_ + loss_skin_) *0.15
         return loss_age + loss_gender + loss_masked + loss_emo + loss_race + loss_skin

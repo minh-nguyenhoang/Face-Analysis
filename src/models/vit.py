@@ -144,8 +144,8 @@ class ViT_Minh(nn.Module):
     def forward(self, x, cls_tokens):
         b, n, _ = x.shape
 
-
-        x = torch.cat((cls_tokens, x), dim=1)
+        cls_tokens_ = repeat(self.cls_token, '1 c d -> b c d', b = b)
+        x = torch.cat((cls_tokens + cls_tokens_, x), dim=1)
         x += self.pos_embedding[:, :(n + 6)]
         x = self.dropout(x)
 

@@ -23,7 +23,7 @@ class BioNet(nn.Module):
         self.cfc = CFC(in_channels, in_channels, n_attributes= n_attributes)
 
         # num_patches, dim, depth, heads, mlp_dim, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0
-        self.vit_head = ViT_Minh(num_patches=7*7, dim=in_channels, depth=6, heads=8, pool='cls', dim_head=128, dropout=0., emb_dropout=0.)
+        self.vit_head = ViT_Minh(num_patches=7*7, dim=in_channels, depth=4, heads=8, pool='cls', dim_head=128, dropout=0., emb_dropout=0.2)
 
         self.age_branch = nn.Sequential(
             nn.Linear(in_channels, 256),
