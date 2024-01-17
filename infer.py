@@ -27,6 +27,7 @@ import timm
 from tqdm.auto import tqdm
 from argparse import ArgumentParser
 from src.posterv2.PosterV2_7cls import load_pretrained_weights, pyramid_trans_expr2
+from src.posterv2.avg_meter import *
 
 
 FER_2013_EMO_DICT = {
