@@ -1,6 +1,5 @@
 import torch
-from torch import nn
-
+from torch import nn, einsum
 from einops import rearrange, repeat
 from einops.layers.torch import Rearrange
 
@@ -354,7 +353,7 @@ class CrossViT(nn.Module):
 
         cls_token_small = repeat(self.cls_token_small, '() n d -> b n d', b = b)
         xs = torch.cat((cls_token_small, xs), dim=1)
-        xs += self.pos_embedding_small[:, :(n + 1)]
+        xs += self.pos_embedding_small[:, :(n + 6)]
         xs = self.dropout_small(xs)
 
         xl = self.to_patch_embedding_large(large_feat)
@@ -362,7 +361,7 @@ class CrossViT(nn.Module):
 
         cls_token_large = repeat(self.cls_token_large, '() n d -> b n d', b=b)
         xl = torch.cat((cls_token_large, xl), dim=1)
-        xl += self.pos_embedding_large[:, :(n + 1)]
+        xl += self.pos_embedding_large[:, :(n + 6)]
         xl = self.dropout_large(xl)
 
         for multi_scale_transformer in self.multi_scale_transformers:
