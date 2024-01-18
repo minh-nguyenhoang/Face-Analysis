@@ -4,7 +4,7 @@ from typing import Iterable, Optional
 import random
 
 '''
-https://github.com/kytimmylai/NoisyNN-PyTorch/tree/main implementation seem wrong as it only does linear transformation noise on 1 dimension(W instead of CxHxW)
+Inspired from https://github.com/kytimmylai/NoisyNN-PyTorch/tree/main, but I wrap it as a function to inject noise into any layer's output given its name.
 There should be two way to implement the random layer choosing:
     - At each step, randomly choose a layer, register forward hook for that layer and remove it afther the forward pass. (Might cause performance issue? Need to check)
     - Register hook for each layer, then performing a random choosing operator at each forward pass. (This should considerably harder but might overcone the )
@@ -15,8 +15,9 @@ class Chosen:
     '''
     just hold the value of the chosen layer name
     '''
-    def  __init__(self) -> None:
+    def  __init__(self, n_layers: int = 1) -> None:
         self.name = None
+        self.n_layers = n_layers
 
 def quality_matrix(k, alpha=0.3):
     """r
@@ -61,11 +62,14 @@ def random_chooser(handles: dict, chosen: Chosen):
     return hook
 
 
-def inject_noisy_nn(model: nn.Module, layers_name: Iterable[str] = ['stages.3.blocks.2','stages.2.blocks.26'], inplace = True):
+def inject_noisy_nn(model: nn.Module, layers_name: Iterable[str] = ['stages.3.blocks.2','stages.2.blocks.26'], n_layers_inject_per_batch: int = 1, inplace = True, verbose = True):
     if getattr(model, "is_noisy", False):
+        if verbose:
+            print(f"The model is already populated with NoisyNN instances. Please consider removing them before adding inject new NoisyNN instance.")
         return model
     handles = {}
-    chosen = Chosen()
+    chosen = Chosen(n_layers_inject_per_batch)
+    layers_name = list(*layers_name)
 
     if not inplace:
         from copy import deepcopy
@@ -74,16 +78,27 @@ def inject_noisy_nn(model: nn.Module, layers_name: Iterable[str] = ['stages.3.bl
     for idx, (name, child) in enumerate(model.named_modules()):
         if name in layers_name:
             handles[name] = (child.register_forward_hook(add_noise(name= name, chosen= chosen))) 
+            layers_name.remove(name)
+            if verbose:
+                print(f"NoisyNN instance injected onto layer {name}")
+
+    if verbose:
+        if len(layers_name) > 0:
+            repr = f'Incompatible layer(s): {layers_name}'
+        else:
+            repr = "<--All chosen layers are injected with NoisyNN instance!-->"
+
+        print(repr)
 
     handles["choser"] = model.register_forward_pre_hook(random_chooser(handles, chosen))
     setattr(model, "noisy_handles", handles)
-    # model.register_forward_hook(hack_output(output_dict= intermediate_outputs))
     setattr(model, "is_noisy", True)
     return model    
 
 def remove_noisy_nn(model: nn.Module, inplace = True, verbose = True):
     if not getattr(model, "is_noisy", False):
-        print("No NoisyNN layer left in the model!")
+        if verbose:
+            print("No NoisyNN instance left in the model!")
         return model
     
     print("Trying to remove NoisyNN!!!")
@@ -100,7 +115,7 @@ def remove_noisy_nn(model: nn.Module, inplace = True, verbose = True):
     delattr(model, 'is_noisy')
     delattr(model, 'noisy_handles')
 
-    print("Done removing NoisyNN!!!")
+    print("<--All injected NoisyNN instances have been removed!-->")
 
     return model
 
