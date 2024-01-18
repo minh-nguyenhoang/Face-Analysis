@@ -190,6 +190,9 @@ def trainer(epochs, model, loss_func, train_dl, valid_dl, opt_fn=None, lr=None, 
             min_val_loss = val_loss
             torch.save(model.state_dict(), PATH + 'best_model_loss.pth')
 
+        if (epoch+1) % 10 == 0:
+            torch.save(model.state_dict(), PATH + f'model_epoch_{epoch+1}.pth')
+            
         # Record the loss and metric
         train_losses.append(mean_loss)
         val_losses.append(val_loss)
