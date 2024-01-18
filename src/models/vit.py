@@ -233,9 +233,9 @@ CrossViT not fixed yet, just copy and paste implementation from Github.
 
 
 class CrossViT(nn.Module):
-    def __init__(self, out_channels, small_dim = 192,
-                 large_dim = 384, small_depth = 2, large_depth = 3, cross_attn_depth = 1, multi_scale_enc_depth = 2,
-                 heads = 3, pool = 'cls', dropout = 0., emb_dropout = 0., scale_dim = 4):
+    def __init__(self, out_channels, small_dim = 384,
+                 large_dim = 768, small_depth = 1, large_depth = 4, cross_attn_depth = 2, multi_scale_enc_depth = 3,
+                 heads = 6, pool = 'cls', dropout = 0., emb_dropout = 0., scale_dim = 2):
         super().__init__()
 
         assert pool in {'cls', 'mean'}, 'pool type must be either cls (cls token) or mean (mean pooling)'

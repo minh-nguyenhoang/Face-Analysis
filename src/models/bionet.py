@@ -7,6 +7,7 @@ from ..utils.layers.icn import ICN, CFC
 from ..utils.layers import CORAL
 import timm
 from .vit import ViT_Minh, CrossViT
+from src.utils.dirty.hack import inject_output_hack, remove_output_hack
 
 # print(timm.list_models(pretrained=True))
 class BioNet(nn.Module):
@@ -18,12 +19,15 @@ class BioNet(nn.Module):
                 if "channel_expansion" not in name:
                     param.requires_grad = False
         self.vcn = backbone
+        inject_output_hack(self.vcn)
         self.in_channels = in_channels
 
 
         # num_patches, dim, depth, heads, mlp_dim, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0
         # self.vit_head = ViT_Minh(num_patches=7*7, dim=in_channels, depth=4, heads=8, pool='cls', dim_head=128, dropout=0., emb_dropout=0.2)
-        self.vit_head = CrossViT(out_channels, small_dim= 192, large_dim= 384, dropout=0., emb_dropout=0.)
+        self.vit_head = CrossViT(out_channels, small_dim = 288,
+                 large_dim = 476, small_depth = 1, large_depth = 4, cross_attn_depth = 2, multi_scale_enc_depth = 3,
+                 heads = 6, pool = 'cls', dropout = 0., emb_dropout = 0., scale_dim = 2)
 
 
 

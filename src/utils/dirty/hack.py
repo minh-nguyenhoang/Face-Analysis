@@ -108,7 +108,7 @@ def inject_output_hack(model: nn.Module,
         if len(layers_name) > 0:
             repr = f'<--Incompatible layer(s): {layers_name}.-->'
         else:
-            repr = "<--All chosen layers are injected with NoisyNN instance!-->"
+            repr = "<--All chosen layers are injected with output caching instance!-->"
 
         print(repr)
 

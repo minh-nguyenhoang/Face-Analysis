@@ -125,6 +125,6 @@ if __name__ == "__main__":
 #   for x, _, _, _, _, _, _ in train_dl:
 #     x = x.cuda()
 #     print(model(x))
-  inject_output_hack(model.vcn)
+#   inject_output_hack(model.vcn)
   trainer(epochs, model, loss_func, train_dl, test_dl, opt_fn=None, lr=args.lr, metric=accuracy, PATH='', device=device)
   remove_output_hack(model.vcn)
