@@ -37,6 +37,8 @@ class PixtaDataset(Dataset):
         self.train_transform = transforms.Compose([
             transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.02, 0.02)],p = 0.2),
                                             transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
+                                            transforms.RandomRotation(degrees=90, fill=128),
+                                            transforms.RandomHorizontalFlip(p=0.5),
                                             RandomGammaCorrection(),
                                             cutout(),
                                             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225)),

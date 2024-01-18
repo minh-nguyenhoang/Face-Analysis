@@ -26,7 +26,7 @@ class BioNet(nn.Module):
         # num_patches, dim, depth, heads, mlp_dim, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0
         # self.vit_head = ViT_Minh(num_patches=7*7, dim=in_channels, depth=4, heads=8, pool='cls', dim_head=128, dropout=0., emb_dropout=0.2)
         self.vit_head = CrossViT(out_channels, small_dim = 288,
-                 large_dim = 476, small_depth = 1, large_depth = 4, cross_attn_depth = 2, multi_scale_enc_depth = 3,
+                 large_dim = 476, small_depth = 2, large_depth = 4, cross_attn_depth = 2, multi_scale_enc_depth = 3,
                  heads = 6, pool = 'cls', dropout = 0., emb_dropout = 0., scale_dim = 2)
 
 
