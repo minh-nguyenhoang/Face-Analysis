@@ -53,7 +53,7 @@ def add_noise(name, chosen: Chosen, debug = False):
                 shape = output.shape
             k = shape[-1]
             # linear_noise = optimal_quality_matrix(k).to(output.device)
-            linear_noise = torch.randn(*shape)
+            linear_noise = torch.randn(*shape).to(output.device)
             output = output*linear_noise + output
             output = output.view(*shape)
             if old_shape is not None:
