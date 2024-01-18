@@ -28,7 +28,8 @@ class BioNet(nn.Module):
 
 
     def forward(self, x):
-        feat = list(self.vcn(x).values())
+        out= self.vcn(x)
+        feat = list(out.values())
 
 
         age, race, gender, mask, emotion, skintone = self.vit_head(feat[0], feat[1])
