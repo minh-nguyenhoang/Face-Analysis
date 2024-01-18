@@ -106,7 +106,7 @@ def inject_output_hack(model: nn.Module,
 
     if verbose:
         if len(layers_name) > 0:
-            repr = f'---Incompatible layer(s): {layers_name}'
+            repr = f'<--Incompatible layer(s): {layers_name}.-->'
         else:
             repr = "<--All chosen layers are injected with NoisyNN instance!-->"
 
@@ -122,10 +122,11 @@ def inject_output_hack(model: nn.Module,
 
 def remove_output_hack(model: nn.Module, inplace = True, verbose = True):
     if not getattr(model, "is_hacked", False):
-        print("<--No output hack found in model!-->")
+        if verbose:
+            print("<--No output hack found in model!-->")
         return model
-    
-    print("<--Trying to remove output hack!!!-->")
+    if verbose:
+        print("<--Trying to remove output hack!!!-->")
 
     if not inplace:
         from copy import deepcopy
@@ -144,9 +145,8 @@ def remove_output_hack(model: nn.Module, inplace = True, verbose = True):
     delattr(model, "is_hacked")
     delattr(model, "output_hack_handles")
     delattr(model, "removed_layers")
-
-    print("<--All injected output hack instances have been removed!-->")
+    if verbose:
+        print("<--All injected output hack instances have been removed!-->")
 
     return model
-    
 
