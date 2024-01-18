@@ -38,7 +38,6 @@ class PixtaDataset(Dataset):
         self.train_transform = transforms.Compose([
             transforms.RandomApply([transforms.ColorJitter(0.25, 0.25, 0.02, 0.02)],p = 0.2),
                                             transforms.RandomApply([transforms.RandomAffine(5, (0.1,0.1), (1.0,1.25))], p=0.2),
-                                            transforms.RandomRotation(degrees=30, fill=128),
                                             transforms.RandomHorizontalFlip(p=0.5),
                                             RandomGammaCorrection(),
                                             cutout(),
@@ -81,7 +80,7 @@ class PixtaDataset(Dataset):
         # print(type(self.age_map))
     
     def __transform__(self, x):
-        x = letterbox(x, (224, 224))
+        x = cv2.resize(x, (224, 224))
         x = np.transpose(x, (2,0,1))
         x = torch.from_numpy(x).float()
         x = x / 255.0
