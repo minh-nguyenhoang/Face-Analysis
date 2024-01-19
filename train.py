@@ -118,13 +118,13 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
         
         if metric is not None:
             # Avg of metric across batches
-            avg_metric = np.sum(np.multiply(np.stack(metrics,axis=0), np.array(nums))) / total
-            avg_age_metric = np.sum(np.multiply(torch.stack(age_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_gender_metric = np.sum(np.multiply(torch.stack(gender_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_masked_metric = np.sum(np.multiply(torch.stack(masked_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_emotion_metric = np.sum(np.multiply(torch.stack(emotion_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_race_metric = np.sum(np.multiply(torch.stack(race_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_skin_metric = np.sum(np.multiply(torch.stack(skin_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+            avg_metric = np.sum(np.multiply(np.stack(metrics, axis= 0), np.array(nums))) / total
+            avg_age_metric = np.sum(np.multiply(np.stack(age_metrics, axis= 0), np.array(nums))) / total
+            avg_gender_metric = np.sum(np.multiply(np.stack(gender_metrics, axis= 0), np.array(nums))) / total
+            avg_masked_metric = np.sum(np.multiply(np.stack(masked_metrics, axis= 0), np.array(nums))) / total
+            avg_emotion_metric = np.sum(np.multiply(np.stack(emotion_metrics, axis= 0), np.array(nums))) / total
+            avg_race_metric = np.sum(np.multiply(np.stack(race_metrics, axis= 0), np.array(nums))) / total
+            avg_skin_metric = np.sum(np.multiply(np.stack(skin_metrics, axis= 0), np.array(nums))) / total
              
     return avg_loss, total, avg_metric, avg_age_metric, avg_gender_metric, avg_masked_metric, avg_emotion_metric, avg_race_metric, avg_skin_metric
 
