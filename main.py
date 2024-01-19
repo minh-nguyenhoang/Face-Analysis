@@ -107,7 +107,7 @@ if __name__ == "__main__":
   
   backbone = vit_base()
   checkpoint = torch.load(f'/kaggle/input/baseline-checkpoint/{args.ckpt}')
-#   print(checkpoint['teacher'].keys())
+  print(checkpoint['teacher'].keys())
   new_checkpoint = checkpoint_dino_filter(checkpoint['student'],backbone)
   print(new_checkpoint.keys())
   backbone.load_state_dict(new_checkpoint, strict=True)
