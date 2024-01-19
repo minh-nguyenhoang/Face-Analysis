@@ -67,7 +67,7 @@ def checkpoint_dino_filter(state_dict, model):
 
     new_state_dict = {}
     for k, v in pretrained_state_dict.items():
-      new_k = k.replace("backbone.model.", "")
+      new_k = k.replace("backbone.", "")
       if new_k in model_keys:
         new_state_dict[new_k] = v
     # print(len(new_student_state_dict.keys()))
@@ -112,7 +112,7 @@ if __name__ == "__main__":
 # #   print(new_checkpoint.keys())
   backbone.load_state_dict(new_checkpoint, strict=False)
 # #   print(backbone)
-  backbone.head = nn.Identity()
+  # backbone.head = nn.Identity()
 
 #   backbone = iresnet100(pretrained= True, num_features = 1024,)
 
