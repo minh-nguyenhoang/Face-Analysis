@@ -90,7 +90,7 @@ class BioNet(nn.Module):
         # b, c, h, w = feat.shape 
         # print(feat.shape)
         # feat = feat.view(b, c, -1).permute(0,2,1)
-        x = self.groupface(feat)
+        x, _, group_prob = self.groupface(feat)
         age = self.age_branch(x)
         race = self.race_branch(x)
         gender = self.gender_branch(x)
