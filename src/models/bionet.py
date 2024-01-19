@@ -7,6 +7,7 @@ from ..utils.layers.icn import ICN, CFC
 from ..utils.layers import CORAL
 import timm
 from .vit import ViT_Dung
+from ..utils.layers.groupface import GroupFace
 
 # print(timm.list_models(pretrained=True))
 class BioNet(nn.Module):
@@ -21,14 +22,81 @@ class BioNet(nn.Module):
         self.in_channels = in_channels
 
         # num_patches, dim, depth, heads, mlp_dim, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0
-        self.vit_head = ViT_Dung(num_patches=7*7, dim=in_channels, depth=8, heads=8, mlp_dim=out_channels, pool='cls', dim_head=128, dropout=0.2, emb_dropout=0.2)
+        self.groupface = GroupFace()
+
+        self.age_branch = nn.Sequential(
+            nn.Linear(out_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 6)
+        )
+
+        self.race_branch = nn.Sequential(
+            nn.Linear(out_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 3)
+        )
+
+        self.gender_branch = nn.Sequential(
+            nn.Linear(out_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 1)
+        )
+        
+        self.masked_branch = nn.Sequential(
+            nn.Linear(out_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 1)
+        )
+
+        self.emotion_branch = nn.Sequential(
+            nn.Linear(out_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 7)
+        )
+
+        self.skintone_branch = nn.Sequential(
+            nn.Linear(out_channels, 256),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(256, 128),
+            nn.ReLU(),
+            nn.Dropout(p=0.2),
+            nn.Linear(128, 4)
+        )
+
 
     def forward(self, x):
         feat = self.vcn(x)
-        b, c, h, w = feat.shape 
+        # b, c, h, w = feat.shape 
         # print(feat.shape)
-        feat = feat.view(b, c, -1).permute(0,2,1)
-        age, race, gender, mask, emotion, skintone = self.vit_head(feat)
+        # feat = feat.view(b, c, -1).permute(0,2,1)
+        x = self.groupface(feat)
+        age = self.age_branch(x)
+        race = self.race_branch(x)
+        gender = self.gender_branch(x)
+        mask = self.masked_branch(x)
+        emotion = self.emotion_branch(x)
+        skintone = self.skintone_branch(x)
 
         return age, race, gender, mask, emotion, skintone
     

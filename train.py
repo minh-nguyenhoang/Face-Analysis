@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import logging
 from tqdm.auto import tqdm
-from sklearn.metrics import accuracy_score, classification_report, precision_score, average_precision_score, recall_score
+from sklearn.metrics import accuracy_score, classification_report, precision_score, average_precision_score, recall_score, f1_score
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -141,12 +141,19 @@ def accuracy(outputs, age, gender, masked, emotion, race, skin, eval):
     race_pred = torch.argmax(out_race, dim=1)
     skin_pred = torch.argmax(out_skin, dim=1)
     
-    age_acc = torch.mean( (age_pred == age).float())
-    gender_acc = torch.mean((gender_pred.squeeze(1).int() == gender).float())
-    masked_acc = torch.mean((masked_pred.squeeze(1).int() == masked).float())
-    emotion_acc = torch.mean((emotion_pred == emotion).float())
-    race_acc = torch.mean((race_pred == race).float())
-    skin_acc = torch.mean((skin_pred == skin).float())
+    # age_acc = torch.mean( (age_pred == age).float())
+    # gender_acc = torch.mean((gender_pred.squeeze(1).int() == gender).float())
+    # masked_acc = torch.mean((masked_pred.squeeze(1).int() == masked).float())
+    # emotion_acc = torch.mean((emotion_pred == emotion).float())
+    # race_acc = torch.mean((race_pred == race).float())
+    # skin_acc = torch.mean((skin_pred == skin).float())
+
+    age_acc = f1_score(age.cpu().numpy(), age_pred.detach().cpu().numpy(), average='macro')
+    gender_acc = f1_score(gender.cpu().numpy(), gender_pred.detach().cpu().numpy(), average='macro')
+    masked_acc = f1_score(masked.cpu().numpy(), masked_pred.detach().cpu().numpy(), average='macro')
+    emotion_acc = f1_score(emotion.cpu().numpy(), emotion_pred.detach().cpu().numpy(), average='macro')
+    race_acc = f1_score(race.cpu().numpy(), race_pred.detach().cpu().numpy(), average='macro')
+    skin_acc = f1_score(skin.cpu().numpy(), skin_pred.detach().cpu().numpy(), average='macro')
 
     return (age_acc + gender_acc + masked_acc + emotion_acc + race_acc + skin_acc) / 6, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc
 
