@@ -90,13 +90,13 @@ class BioNet(nn.Module):
         # b, c, h, w = feat.shape 
         # print(feat.shape)
         # feat = feat.view(b, c, -1).permute(0,2,1)
-        x, _, group_prob = self.groupface(feat)
-        age = self.age_branch(x)
-        race = self.race_branch(x)
-        gender = self.gender_branch(x)
-        mask = self.masked_branch(x)
-        emotion = self.emotion_branch(x)
-        skintone = self.skintone_branch(x)
+        # x, _, group_prob = self.groupface(feat)
+        age = self.age_branch(feat)
+        race = self.race_branch(feat)
+        gender = self.gender_branch(feat)
+        mask = self.masked_branch(feat)
+        emotion = self.emotion_branch(feat)
+        skintone = self.skintone_branch(feat)
 
         return age, race, gender, mask, emotion, skintone
     
