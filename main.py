@@ -67,7 +67,7 @@ def checkpoint_dino_filter(state_dict, model):
 
     new_state_dict = {}
     for k, v in pretrained_state_dict.items():
-      new_k = k.replace("backbone.", "")
+      new_k = k.replace("backbone.module.", "")
       print(new_k)
       if new_k in model_keys:
         new_state_dict[new_k] = v
