@@ -28,7 +28,7 @@ class SelfGroupingLoss(nn.Module):
             group_label_u: torch.Tensor = (inputs - group_label_E) / groups + 1 / groups
             targets = torch.argmax(group_label_u, dim = -1).detach()
 
-        log_prob = torch.log(inputs)
+        log_prob = torch.log(inputs + 1e-4)
 
         loss = self.critetion(log_prob, targets)
 

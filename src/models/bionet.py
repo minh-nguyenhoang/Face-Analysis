@@ -98,7 +98,10 @@ class BioNet(nn.Module):
         emotion = self.emotion_branch(x)
         skintone = self.skintone_branch(x)
 
-        return age, race, gender, mask, emotion, skintone
+        if self.training:
+            return age, race, gender, mask, emotion, skintone, group_prob
+        else:
+            return age, race, gender, mask, emotion, skintone
     
     @classmethod
     def from_inputs(cls, backbone: nn.Module, out_channels:int = 512, n_attributes:int = 4, inputs: torch.Tensor= None, input_shape: torch.Size=None, fine_tune=False):
