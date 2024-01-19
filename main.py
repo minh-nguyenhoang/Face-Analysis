@@ -69,8 +69,8 @@ def checkpoint_dino_filter(state_dict, model):
     for k, v in pretrained_state_dict.items():
     #   k:str = k
     #   new_k = k.replace("backbone.module.", "")
-      new_k = k.removeprefix('backbone.')
-      print(k, new_k)
+      new_k = k.removeprefix('module.backbone.')
+    #   print(k, new_k)
       if new_k in model_keys:
         new_state_dict[new_k] = v
 
@@ -110,9 +110,9 @@ if __name__ == "__main__":
   
   backbone = vit_base()
   checkpoint = torch.load(f'/kaggle/input/baseline-checkpoint/{args.ckpt}')
-  print(checkpoint['teacher'].keys())
+#   print(checkpoint['teacher'].keys())
   new_checkpoint = checkpoint_dino_filter(checkpoint['student'],backbone)
-  print(new_checkpoint.keys())
+#   print(new_checkpoint.keys())
   backbone.load_state_dict(new_checkpoint, strict=True)
 # #   print(backbone)
   backbone.head = nn.Identity()
