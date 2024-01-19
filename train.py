@@ -91,13 +91,13 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
                 metric_result, age_acc, gender_acc, masked_acc, emotion_acc, race_acc, skin_acc = metric(out, age, gender, masked, emotion, race, skin, eval)
             losses.append(loss_batch.cpu())
             nums.append(len(xb))
-            metrics.append(metric_result.cpu())
-            age_metrics.append(age_acc.cpu())
-            gender_metrics.append(gender_acc.cpu())
-            masked_metrics.append(masked_acc.cpu())
-            emotion_metrics.append(emotion_acc.cpu())
-            race_metrics.append(race_acc.cpu())
-            skin_metrics.append(skin_acc.cpu())
+            metrics.append(metric_result)
+            age_metrics.append(age_acc)
+            gender_metrics.append(gender_acc)
+            masked_metrics.append(masked_acc)
+            emotion_metrics.append(emotion_acc)
+            race_metrics.append(race_acc)
+            skin_metrics.append(skin_acc)
 
         for k, v in preds.items():
             preds[k] = torch.cat(v, dim=0).cpu().tolist()
@@ -118,13 +118,13 @@ def evaluate(model, loss_func, valid_dl, metric=None, device=None, eval=False):
         
         if metric is not None:
             # Avg of metric across batches
-            avg_metric = np.sum(np.multiply(torch.stack(metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_age_metric = np.sum(np.multiply(torch.stack(age_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_gender_metric = np.sum(np.multiply(torch.stack(gender_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_masked_metric = np.sum(np.multiply(torch.stack(masked_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_emotion_metric = np.sum(np.multiply(torch.stack(emotion_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_race_metric = np.sum(np.multiply(torch.stack(race_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
-            avg_skin_metric = np.sum(np.multiply(torch.stack(skin_metrics,dim=0).cpu().numpy(), np.array(nums))) / total
+            avg_metric = np.sum(np.multiply(np.array(metrics), np.array(nums))) / total
+            avg_age_metric = np.sum(np.multiply(np.array(age_metrics), np.array(nums))) / total
+            avg_gender_metric = np.sum(np.multiply(np.array(gender_metrics), np.array(nums))) / total
+            avg_masked_metric = np.sum(np.multiply(np.array(masked_metrics), np.array(nums))) / total
+            avg_emotion_metric = np.sum(np.multiply(np.array(emotion_metrics), np.array(nums))) / total
+            avg_race_metric = np.sum(np.multiply(np.array(race_metrics), np.array(nums))) / total
+            avg_skin_metric = np.sum(np.multiply(np.array(skin_metrics), np.array(nums))) / total
              
     return avg_loss, total, avg_metric, avg_age_metric, avg_gender_metric, avg_masked_metric, avg_emotion_metric, avg_race_metric, avg_skin_metric
 
