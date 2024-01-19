@@ -30,7 +30,7 @@ class multi_task_loss(nn.Module):
         self.masked_loss =  BinFocalLoss(alpha=torch.tensor(0.25).to(device))
         self.race_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.]).to(device))
         self.skin_loss = FocalLoss(gamma= 2, alpha=torch.tensor([ 0.25, 0.5, 1., 1.]).to(device))
-        self.emo_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.,1.,1.,1.5,1.]).to(device))
+        self.emo_loss = FocalLoss(gamma= 2, alpha=torch.tensor([0.25, 0.25, 1.,1.,1.,1.2,1.2]).to(device))
 
     
     def forward(self, x, age, gender, masked, emotion, race, skin):
