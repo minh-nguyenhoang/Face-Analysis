@@ -21,7 +21,7 @@ class BioNet(nn.Module):
         self.in_channels = in_channels
 
         # num_patches, dim, depth, heads, mlp_dim, pool = 'cls', dim_head = 64, dropout = 0., emb_dropout = 0
-        self.vit_head = ViT_Dung(num_patches=7*7, dim=in_channels, depth=8, heads=8, mlp_dim=out_channels, pool='cls', dim_head=128, dropout=0., emb_dropout=0.)
+        self.vit_head = ViT_Dung(num_patches=7*7, dim=in_channels, depth=6, heads=8, mlp_dim=out_channels, pool='cls', dim_head=128, dropout=0., emb_dropout=0.)
 
     def forward(self, x):
         feat = self.vcn(x)
