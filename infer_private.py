@@ -128,7 +128,7 @@ def main():
     
     model.eval()
 
-    test_dataset = TestDataset(root= '/kaggle/input/pixta-private-test/private_test_data/private_test_data', json_file= '/kaggle/input/Pixta-private-test/private_test/private_test/file_name_to_image_id.json')
+    test_dataset = TestDataset(root= '/kaggle/input/pixta-private-test/private_test_data/private_test_data', json_file= '/kaggle/input/pixta-private-test/private_test/private_test/file_name_to_image_id.json')
     test_dataloader: DataLoader = DataLoader(test_dataset, batch_size= 16)
 
     file_names, bboxes, image_id, ages, races, genders, masks, emotions, skintones = [], [], [], [], [], [], [], [], []
